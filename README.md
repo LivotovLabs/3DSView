@@ -16,9 +16,9 @@ the performAuthorization(...) method.
 # Quick Usage
 
 - Build your own or download precompiled 3dsview.jar from releases section and put it to the libs folder of your app project.
-- Add eu.livotov.labs.android.3ds.3DSView to your layout
-- In corresponding activity or fragment, configure the instance of 3DSView by calling setXXX mthods (see configuration options below)
-- Invoke the authorize(...) method, providing "dummy" postback url (optionally), callback listener and 3DS initiation parameters.
+- Add eu.livotov.labs.android.ddds.DDDSView to your layout
+- Set auhtorization listener to handle authorization events
+- Call dddsView.authorize(...) to begin authorization process
 
-Once user completes the authorization, your callback method will be called with the 3DS response data, which you may
-pass to your processing backend server for payment finalization.
+Once user completes the authorization, your callback method will be called with the 3DS response data (MD and PaRes), 
+ready to be passed to your credit card processing gateway for payment finalization.
