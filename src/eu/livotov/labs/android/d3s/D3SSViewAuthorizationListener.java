@@ -1,7 +1,9 @@
 package eu.livotov.labs.android.d3s;
 
 /**
- * (c) Livotov Labs Ltd. 2012
+ * (c) Livotov Labs Ltd. 2013
+ * Alex Askerov, Dmitri Livotov
+ *
  * Date: 20/09/2013
  * <p/>
  * Callback interface to receive authorization events
