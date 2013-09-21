@@ -1,4 +1,4 @@
-package eu.livotov.labs.android.ddds;
+package eu.livotov.labs.android.d3s;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * with the parameters, came from banking ACS server. Now you can use those parameters in your bckend processing server
  * to finalize the payment.</p>
  */
-public class DDDSView extends WebView
+public class D3SView extends WebView
 {
 
     /**
@@ -68,33 +68,33 @@ public class DDDSView extends WebView
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
      * this URL in WebView handler to intercept its loading and grabbing the resulting data from POST message instead.
      */
-    private String postbackUrl = "https://ddds.postback.com";
+    private String postbackUrl = "https://d3s.postback.com";
 
     /**
      * Callback to send authorization events to
      */
-    private DDDSViewAuthorizationListener authorizationListener = null;
+    private D3SSViewAuthorizationListener authorizationListener = null;
 
 
-    public DDDSView(final Context context)
+    public D3SView(final Context context)
     {
         super(context);
         initUI();
     }
 
-    public DDDSView(final Context context, final AttributeSet attrs)
+    public D3SView(final Context context, final AttributeSet attrs)
     {
         super(context, attrs);
         initUI();
     }
 
-    public DDDSView(final Context context, final AttributeSet attrs, final int defStyle)
+    public D3SView(final Context context, final AttributeSet attrs, final int defStyle)
     {
         super(context, attrs, defStyle);
         initUI();
     }
 
-    public DDDSView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing)
+    public D3SView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing)
     {
         super(context, attrs, defStyle, privateBrowsing);
         initUI();
@@ -207,7 +207,7 @@ public class DDDSView extends WebView
      * Sets the callback to receive auhtorization events
      * @param authorizationListener
      */
-    public void setAuthorizationListener(final DDDSViewAuthorizationListener authorizationListener)
+    public void setAuthorizationListener(final D3SSViewAuthorizationListener authorizationListener)
     {
         this.authorizationListener = authorizationListener;
     }

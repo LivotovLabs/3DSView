@@ -1,4 +1,4 @@
-package eu.livotov.labs.android.ddds;
+package eu.livotov.labs.android.d3s;
 
 /**
  * (c) Livotov Labs Ltd. 2012
@@ -6,7 +6,7 @@ package eu.livotov.labs.android.ddds;
  * <p/>
  * Callback interface to receive authorization events
  */
-public interface DDDSViewAuthorizationListener
+public interface D3SSViewAuthorizationListener
 {
 
     /**
@@ -22,9 +22,9 @@ public interface DDDSViewAuthorizationListener
      * Called when authorization process is started and web page from ACS server is being loaded.
      * For isntace, you may display progress now, etc...
      *
-     * @param dddsView reference for the DDDSView instance
+     * @param view reference for the DDDSView instance
      */
-    void onAuthorizationStarted(DDDSView dddsView);
+    void onAuthorizationStarted(D3SView view);
 
     /**
      * Called to update the ACS web page loading progress.
