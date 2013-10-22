@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact name="3dsview:jar">
+    <output-path>$USER_HOME$/Desktop</output-path>
+    <root id="root">
+      <element id="archive" name="3dsview.jar">
+        <element id="module-output" name="3DSView" />
+      </element>
+    </root>
+  </artifact>
+</component>
