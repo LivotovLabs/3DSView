@@ -1,7 +1,7 @@
-3DSView (D3SView :)
+3DSView (D3SView :) , aka 3D Secure WebView
 ===================
 
-Self-contained UI component to process banking 3DS (MasterCard Secure Code / Verified By Visa) payment 
+Self-contained UI component to process banking 3D Secure (MasterCard SecureCode / Verified By Visa) payment 
 authorizations in Android apps.
 
 Why D3S ? Simply because Java does not allow to have package and class names beginning with the digit, so we simply swapped
