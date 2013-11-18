@@ -158,7 +158,7 @@ public class D3SView extends WebView
             {
                 if (authorizationListener != null)
                 {
-                    authorizationListener.onAuthorizationWebPageLoadingProgressChanged(newProgress * 100);
+                    authorizationListener.onAuthorizationWebPageLoadingProgressChanged(newProgress);
                 }
             }
         });
