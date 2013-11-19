@@ -1,24 +1,27 @@
 package eu.livotov.labs.android.d3s;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.http.SslError;
-import android.os.AsyncTask;
-import android.text.TextUtils;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.webkit.*;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.http.SslError;
+import android.text.TextUtils;
+import android.util.AttributeSet;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+
 
 /**
  * (c) Livotov Labs Ltd. 2013
@@ -107,7 +110,7 @@ public class D3SView extends WebView
 
     public D3SView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing)
     {
-        super(context, attrs, defStyle, privateBrowsing);
+        super(context, attrs, defStyle);
         initUI();
     }
 
@@ -116,14 +119,9 @@ public class D3SView extends WebView
         getSettings().setJavaScriptEnabled(true);
         getSettings().setBuiltInZoomControls(true);
         addJavascriptInterface(new D3SJSInterface(), JavaScriptNS);
-        getSettings().setSavePassword(false);
 
         setWebViewClient(new WebViewClient()
         {
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
-            {
-            }
-
 
             public void onPageStarted(WebView view, String url, Bitmap icon)
             {
@@ -139,7 +137,14 @@ public class D3SView extends WebView
                     }
                 }
             }
-
+            
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
+            {
+                if(!failingUrl.startsWith(postbackUrl)) {
+            		authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
+            	}
+            }
+            
             public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error)
             {
                 if (debugMode)
@@ -158,7 +163,7 @@ public class D3SView extends WebView
             {
                 if (authorizationListener != null)
                 {
-                    authorizationListener.onAuthorizationWebPageLoadingProgressChanged(newProgress * 100);
+                    authorizationListener.onAuthorizationWebPageLoadingProgressChanged(newProgress);
                 }
             }
         });
