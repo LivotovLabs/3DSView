@@ -1,20 +1,16 @@
-3DSView (D3SView :)
+3DSView (D3SView :) , aka 3D Secure WebView
 ===================
 
-Self-contained UI component to process banking 3DS (MasterCard Secure Code / Verified By Visa) payment 
+Self-contained UI component to process banking 3D Secure (MasterCard SecureCode / Verified By Visa) payment 
 authorizations in Android apps.
 
-Why D3S ? Simply because Java does not allow to have package and class names beginning with the digit, so we simply swapped
-first two letters in source code :)
+Why exactly "D3S" ? Simply because Java does not allow to have number as a first character in a package and class names :)
 
-It handles the complete process from redirecting user to an ACS banking server, displaying web interface for payment 
-authorization and "catching" authorization results and parameters, so you don't need to dig into WebView internals,
-intercept post events on your own and parse html code. Simply add it to your layout, invoke only two methods and then
-you have 3DS implemented in your app.
+Component have to be used instead of a WebView and handles the complete payment authorization process from redirecting user to an ACS banking server web UI and to grabbing authorization results and parameters, intercepting post events and parsing the code. 
 
-Component can be used in activity, fragment or in any other part of your layout. Only ensure you gave it sufficient
-space on the screen to display the banking ACS page to the user. Just add it to your layout, set parameters and
-authorization callbacks and invoke the performAuthorization(...) method.
+Simply add it to your layout just instead of a WebView, invoke only two methods and then you have 3DS auth implemented.
+
+Component can be used in activity, fragment or in any other part of your layout, both declaratively (in xml files) or programmatically by creating an instance in the source code.  Only make sure to give it sufficient space on the screen to display the banking ACS web page. 
 
 
 Status
@@ -47,12 +43,11 @@ Quick Usage
 ===========
 
 - Build your own or download precompiled 3dsview.jar from releases section and put it to the libs folder of your app project.
-- Add eu.livotov.labs.android.d3s.D3SView to your layout
+- Add eu.livotov.labs.android.d3s.D3SView to your layout file (or create and add it programmatically)
 - In corresponding activity or fragment, configure the instance of D3SView by calling setXXX methods (see configuration options below)
 - Invoke the authorize(...) method, providing "dummy" postback url (optionally), callback listener and 3DS initiation parameters.
 
-Once user completes the authorization, your callback method will be called with the 3DS response data, which you may
-pass to your processing backend server for payment finalization.
+Once user completes the authorization at the ACS server, your callback method will be automatically called with the 3DS response data, which you may then pass to your processing backend server for payment finalization.
 
 
 Configuration
@@ -67,8 +62,15 @@ progress messages. You will receive authorization MD and PaRes values there as w
 Start
 =====
 
-Simply call d3sview.authorize(...) method and pass MD, PaReq and ACS url values, you receive from your card payment gateway.
-And then listen for authorization completion events.
+Simply call d3sview.authorize(...) method and pass MD, PaReq and ACS url values, you receive from your card payment gateway and listen for authorization completion event in your callback. 
+
+P.S. Specifying postback url is optional, the library will use the default value then.
+
+
+Roadmap
+=======
+
+- Add gradle and maven repo support, so library can be automatically downloaded and used in the projects.
 
 
 Bugs, Suggestions, Ideas
