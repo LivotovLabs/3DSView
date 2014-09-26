@@ -1,17 +1,5 @@
 package eu.livotov.labs.android.d3s;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
@@ -21,6 +9,17 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -82,7 +81,9 @@ public class D3SView extends WebView
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
      * this URL in WebView handler to intercept its loading and grabbing the resulting data from POST message instead.
      */
-    private String postbackUrl = "https://d3s.postback.com";
+    private String postbackUrl = "https://www.google.com";
+
+    private boolean postbackHandled =false;
 
     /**
      * Callback to send authorization events to
@@ -125,10 +126,11 @@ public class D3SView extends WebView
 
             public void onPageStarted(WebView view, String url, Bitmap icon)
             {
-                if (!urlReturned)
+                if (!urlReturned && !postbackHandled)
                 {
-                    if (url.startsWith(postbackUrl))
+                    if (url.toLowerCase().contains(postbackUrl.toLowerCase()))
                     {
+                        postbackHandled = true;
                         view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                         urlReturned = true;
                     } else
@@ -137,14 +139,28 @@ public class D3SView extends WebView
                     }
                 }
             }
-            
+
+            public boolean shouldOverrideUrlLoading(final WebView view, final String url)
+            {
+                if (!postbackHandled && url.toLowerCase().contains(postbackUrl.toLowerCase()))
+                {
+                    postbackHandled = true;
+                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                    return true;
+                } else
+                {
+                    return super.shouldOverrideUrlLoading(view, url);
+                }
+            }
+
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
             {
-                if(!failingUrl.startsWith(postbackUrl)) {
-            		authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
-            	}
+                if (!failingUrl.startsWith(postbackUrl))
+                {
+                    authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
+                }
             }
-            
+
             public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error)
             {
                 if (debugMode)
