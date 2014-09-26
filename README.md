@@ -48,6 +48,7 @@ dependencies {
 ``
 
 - For snapshots:
+
 ``
     configurations.all {
         // check for updates every build, so you will pick up latest snapshot, even if it was refreshed a minute ago.
@@ -60,6 +61,7 @@ dependencies {
         ...
     }
 ``
+
 Alternatively, you may download the source code and build it on your own.
 
 
@@ -91,13 +93,12 @@ Simply call d3sview.authorize(...) method and pass MD, PaReq and ACS url values,
 P.S. Specifying postback url is optional, the library will use the default value then.
 
 
-Roadmap
-=======
-
-- Add gradle and maven repo support, so library can be automatically downloaded and used in the projects.
-
 
 Bugs, Suggestions, Ideas
 ========================
 Any ideas/bugs/etc as well as pull requests are welcome into the issues section.
 
+
+Credits
+=======
+Alex Askerov, Mia Alexiou
