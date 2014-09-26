@@ -34,4 +34,12 @@ public interface D3SSViewAuthorizationListener
      * @param progress current loading progress from 0 to 100.
      */
     void onAuthorizationWebPageLoadingProgressChanged(int progress);
+
+    /**
+     * Called if a loading error occurs
+     * @param errorCode
+     * @param description
+     * @param failingUrl
+     */
+    void onAuthorizationWebPageLoadingError(int errorCode, String description, String failingUrl);
 }
