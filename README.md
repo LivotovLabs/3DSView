@@ -32,35 +32,32 @@ Current compiled snapshots and releases could be automatically added to your pro
 
 Add link to our repository to your gradle build file (repositories section):
 
-``
+```
     maven { url 'http://maven.livotovlabs.pro/content/groups/public' }
-``
+```
 
 Then append appropriate dependency to your "compile" statement:
 
-- For release version:
-``
+For release version:
+
+```
 dependencies {
-    ...
     compile 'labs.livotov.eu:3dsview:1.0.0'
-    ...
 }
-``
+```
 
-- For snapshots:
+For snapshots:
 
-``
+```
     configurations.all {
         // check for updates every build, so you will pick up latest snapshot, even if it was refreshed a minute ago.
         resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
     }
 
     dependencies {
-        ...
         compile group: "eu.livotov.labs", name: "3dsview", version: "1.1.0-SNAPSHOT", ext: "aar", changing: true
-        ...
     }
-``
+```
 
 Alternatively, you may download the source code and build it on your own.
 
