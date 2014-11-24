@@ -68,7 +68,7 @@ public class D3SView extends WebView
     private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", 32);
 
     /**
-     * Internal flag for trasking web page url changes in WebView
+     * Internal flag for tracking web page url changes in WebView
      */
     private boolean urlReturned = false;
 
@@ -83,7 +83,7 @@ public class D3SView extends WebView
      */
     private String postbackUrl = "https://www.google.com";
 
-    private boolean postbackHandled =false;
+    private boolean postbackHandled = false;
 
     /**
      * Callback to send authorization events to
@@ -249,7 +249,7 @@ public class D3SView extends WebView
     }
 
     /**
-     * Sets the callback to receive auhtorization events
+     * Sets the callback to receive authorization events
      *
      * @param authorizationListener
      */
