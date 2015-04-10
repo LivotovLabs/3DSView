@@ -27,6 +27,11 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
 
     private Handler handler;
 
+    public static D3SDialog newInstance(final String acsUrl, final String md, final String paReq, D3SDialogListener listener)
+    {
+        return newInstance(acsUrl, md, paReq, null, listener);
+    }
+
     public static D3SDialog newInstance(final String acsUrl, final String md, final String paReq, final String postbackUrl, D3SDialogListener listener)
     {
         D3SDialog dialog = new D3SDialog();
@@ -40,11 +45,6 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
         return dialog;
     }
 
-    public static D3SDialog newInstance(final String acsUrl, final String md, final String paReq, D3SDialogListener listener)
-    {
-        return newInstance(acsUrl, md, paReq, null, listener);
-    }
-
     public void showDialogAndAuthenticate(FragmentActivity activity)
     {
         if (activity.getCurrentFocus() != null)
@@ -55,7 +55,8 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
         try
         {
             activity.getSupportFragmentManager().executePendingTransactions();
-        } catch (Throwable err)
+        }
+        catch (Throwable err)
         {
             err.printStackTrace();
         }
@@ -91,7 +92,8 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
         if (TextUtils.isEmpty(postback))
         {
             authenticator.authorize(acs, md, pareq);
-        } else
+        }
+        else
         {
             authenticator.authorize(acs, md, pareq, postback);
         }

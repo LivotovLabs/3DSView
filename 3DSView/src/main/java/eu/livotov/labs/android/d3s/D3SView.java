@@ -9,6 +9,7 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
@@ -83,7 +84,7 @@ public class D3SView extends WebView
      */
     private String postbackUrl = "https://www.google.com";
 
-    private boolean postbackHandled =false;
+    private boolean postbackHandled = false;
 
     /**
      * Callback to send authorization events to
@@ -97,24 +98,6 @@ public class D3SView extends WebView
         initUI();
     }
 
-    public D3SView(final Context context, final AttributeSet attrs)
-    {
-        super(context, attrs);
-        initUI();
-    }
-
-    public D3SView(final Context context, final AttributeSet attrs, final int defStyle)
-    {
-        super(context, attrs, defStyle);
-        initUI();
-    }
-
-    public D3SView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing)
-    {
-        super(context, attrs, defStyle);
-        initUI();
-    }
-
     private void initUI()
     {
         getSettings().setJavaScriptEnabled(true);
@@ -123,6 +106,20 @@ public class D3SView extends WebView
 
         setWebViewClient(new WebViewClient()
         {
+
+            public boolean shouldOverrideUrlLoading(final WebView view, final String url)
+            {
+                if (!postbackHandled && url.toLowerCase().contains(postbackUrl.toLowerCase()))
+                {
+                    postbackHandled = true;
+                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                    return true;
+                }
+                else
+                {
+                    return super.shouldOverrideUrlLoading(view, url);
+                }
+            }
 
             public void onPageStarted(WebView view, String url, Bitmap icon)
             {
@@ -133,23 +130,11 @@ public class D3SView extends WebView
                         postbackHandled = true;
                         view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                         urlReturned = true;
-                    } else
+                    }
+                    else
                     {
                         super.onPageStarted(view, url, icon);
                     }
-                }
-            }
-
-            public boolean shouldOverrideUrlLoading(final WebView view, final String url)
-            {
-                if (!postbackHandled && url.toLowerCase().contains(postbackUrl.toLowerCase()))
-                {
-                    postbackHandled = true;
-                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                    return true;
-                } else
-                {
-                    return super.shouldOverrideUrlLoading(view, url);
                 }
             }
 
@@ -183,6 +168,24 @@ public class D3SView extends WebView
                 }
             }
         });
+    }
+
+    public D3SView(final Context context, final AttributeSet attrs)
+    {
+        super(context, attrs);
+        initUI();
+    }
+
+    public D3SView(final Context context, final AttributeSet attrs, final int defStyle)
+    {
+        super(context, attrs, defStyle);
+        initUI();
+    }
+
+    public D3SView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing)
+    {
+        super(context, attrs, defStyle);
+        initUI();
     }
 
     private void completeAuthorization(String html)
@@ -303,7 +306,8 @@ public class D3SView extends WebView
         try
         {
             new UrlEncodedFormEntity(params, HTTP.UTF_8).writeTo(bos);
-        } catch (IOException e)
+        }
+        catch (IOException e)
         {
         }
 

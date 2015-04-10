@@ -16,13 +16,14 @@ Component can be used in activity, fragment or in any other part of your layout,
 Status
 ======
 
-- Current stable version: 1.0.0
-- Current development version: 1.1.0-SNAPSHOT
+- Current stable version: 1.1.0
+- Current development version: n/a
 
 
 What's new (1.1.0)
 ==========
 - Added D3SDialog as DialogFragment, so you can perform 3DS authorization using a nice dialog above your business activity
+- Updated project to the latest android plugin and build tools
 
 
 
@@ -39,30 +40,33 @@ Add link to our repository to your gradle build file (repositories section):
 Then append appropriate dependency to your "compile" statement:
 
 - For release version:
-``
+
+```
 dependencies {
     ...
-    compile 'labs.livotov.eu:3dsview:1.0.0'
+    compile 'labs.livotov.eu:3dsview:1.1.0'
     ...
 }
-``
+```
 
 - For snapshots:
 
-``
+```
     configurations.all {
         // check for updates every build, so you will pick up latest snapshot, even if it was refreshed a minute ago.
         resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
     }
+```
 
+```
     dependencies {
         ...
-        compile group: "eu.livotov.labs", name: "3dsview", version: "1.1.0-SNAPSHOT", ext: "aar", changing: true
+        compile group: "eu.livotov.labs", name: "3dsview", version: "1.x.y-SNAPSHOT", ext: "aar", changing: true
         ...
     }
 ``
 
-Alternatively, you may download the source code and build it on your own.
+Alternatively you may download the source code and build it on your own.
 
 
 Quick Usage
@@ -101,4 +105,4 @@ Any ideas/bugs/etc as well as pull requests are welcome into the issues section.
 
 Credits
 =======
-Alex Askerov, Mia Alexiou
+Alex Askerov (@askerov), Mia Alexiou (@subsymbolic)

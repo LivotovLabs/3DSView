@@ -3,7 +3,7 @@ package eu.livotov.labs.android.d3s;
 /**
  * (c) Livotov Labs Ltd. 2013
  * Alex Askerov, Dmitri Livotov
- *
+ * <p/>
  * Date: 20/09/2013
  * <p/>
  * Callback interface to receive authorization events
@@ -37,6 +37,7 @@ public interface D3SSViewAuthorizationListener
 
     /**
      * Called if a loading error occurs
+     *
      * @param errorCode
      * @param description
      * @param failingUrl

@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'com.android.tools.build:gradle:1.1.0'
     }
 }
 apply plugin: 'com.android.library'
@@ -17,7 +17,6 @@ android {
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "eu.livotov.labs.android.d3s"
         minSdkVersion 10
         targetSdkVersion 20
         versionCode Integer.parseInt(project.VERSION_CODE)
@@ -25,7 +24,7 @@ android {
     }
     buildTypes {
         release {
-            runProguard false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -37,4 +36,4 @@ dependencies {
     compile 'com.android.support:support-v4:20+'
 }
 
-apply from: '../maven-push.gradle'
+apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
