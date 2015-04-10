@@ -62,7 +62,7 @@ For snapshots:
         compile group: "eu.livotov.labs", name: "3dsview", version: "1.x.y-SNAPSHOT", ext: "aar", changing: true
         ...
     }
-``
+```
 
 Alternatively you may download the source code and build it on your own.
 
