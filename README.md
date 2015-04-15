@@ -39,24 +39,24 @@ Then append appropriate dependency to your "compile" statement:
 
 - For release version:
 
-```
+```groovy
 dependencies {
     ...
-    compile 'labs.livotov.eu:3dsview:1.1.0'
+    compile 'eu.livotov.labs:3dsview:1.1.0@aar'
     ...
 }
 ```
 
 For snapshots:
 
-```
+```groovy
     configurations.all {
         // check for updates every build, so you will pick up latest snapshot, even if it was refreshed a minute ago.
         resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
     }
 ```
 
-```
+```groovy
     dependencies {
         ...
         compile group: "eu.livotov.labs", name: "3dsview", version: "1.x.y-SNAPSHOT", ext: "aar", changing: true
