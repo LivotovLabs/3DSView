@@ -15,7 +15,7 @@ Component can be used in activity, fragment or in any other part of your layout,
 Status
 ======
 
-- Current stable version: 1.1.0
+- Current stable version: [ ![Download](https://api.bintray.com/packages/livotovlabs/maven/3DSView/images/download.svg) ](https://bintray.com/livotovlabs/maven/3DSView/_latestVersion)
 - Current development version: n/a
 
 What's new (1.1.0)
@@ -25,19 +25,9 @@ What's new (1.1.0)
 
 Installation
 ============
-Current compiled snapshots and releases could be automatically added to your project using gradle from our [maven repository](http://maven.livotovlabs.pro)
 
-Add a link to our repository to your `build.gradle` file (repositories section):
-
-```groovy
-maven { 
-    url 'http://maven.livotovlabs.pro/content/groups/public/'
-}
-```
-
-Then append appropriate dependency to your "compile" statement:
-
-- For release version:
+Release versions are available from jCenter repository, so just add the "compile..." statement to your project. For snapshots, please
+add our bintray snapshots repository url first: https://dl.bintray.com/livotovlabs/maven
 
 ```groovy
 dependencies {
@@ -47,24 +37,8 @@ dependencies {
 }
 ```
 
-For snapshots:
-
-```groovy
-    configurations.all {
-        // check for updates every build, so you will pick up latest snapshot, even if it was refreshed a minute ago.
-        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-    }
-```
-
-```groovy
-    dependencies {
-        ...
-        compile group: "eu.livotov.labs", name: "3dsview", version: "1.x.y-SNAPSHOT", ext: "aar", changing: true
-        ...
-    }
-```
-
 Alternatively you may download the source code and build it on your own.
+
 
 Quick Usage
 ===========

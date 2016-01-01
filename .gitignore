@@ -5,3 +5,4 @@
 *.jpr
 .DS_Store
 /build
+maven.secret.properties
