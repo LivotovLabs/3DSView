@@ -18,6 +18,18 @@ Status
 - Current stable version: [ ![Download](https://api.bintray.com/packages/livotovlabs/maven/3DSView/images/download.svg) ](https://bintray.com/livotovlabs/maven/3DSView/_latestVersion)
 - Current development version: n/a
 
+Get It
+===
+
+- Maven repository: jCenter
+- Group: eu.livotov.labs.android
+- Artifact ID: 3DSView
+
+```groovy
+compile ('eu.livotov.labs.android:3DSView:1.1.0@aar') {transitive=true}
+
+```
+
 What's new (1.1.0)
 ==========
 - Added D3SDialog as DialogFragment, so you can perform 3DS authorization using a nice dialog above your business activity
