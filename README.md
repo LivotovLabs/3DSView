@@ -26,10 +26,14 @@ Get It
 - Artifact ID: 3DSView
 
 ```groovy
-compile ('eu.livotov.labs.android:3DSView:1.1.0@aar') {transitive=true}
+repositories {
+    maven { url  "http://dl.bintray.com/livotovlabs/maven" }
+}
+dependencies {
+    compile ('eu.livotov.labs.android:3DSView:1.1.0@aar') {transitive=true}
+}
 
 ```
-
 What's new (1.1.0)
 ==========
 - Added D3SDialog as DialogFragment, so you can perform 3DS authorization using a nice dialog above your business activity
@@ -42,9 +46,12 @@ Release versions are available from jCenter repository, so just add the "compile
 add our bintray snapshots repository url first: https://dl.bintray.com/livotovlabs/maven
 
 ```groovy
+repositories {
+    maven { url  "http://dl.bintray.com/livotovlabs/maven" }
+}
 dependencies {
     ...
-    compile 'eu.livotov.labs.android:3dsview:1.1.0@aar'
+    compile 'eu.livotov.labs.android:3DSView:1.1.0@aar'
     ...
 }
 ```
