@@ -84,4 +84,4 @@ Any ideas/bugs/etc, as well as pull requests, are welcome in the [issues section
 
 Credits
 =======
-Alex Askerov (@askerov), Mia Alexiou (@subsymbolic) Luke Korth (@lkorth)
+Alex Askerov (@askerov), Mia Alexiou (@subsymbolic), Luke Korth (@lkorth), Christophe Beyls (@cbeyls)
