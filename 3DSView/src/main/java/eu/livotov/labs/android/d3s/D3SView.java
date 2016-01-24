@@ -10,15 +10,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -296,22 +290,21 @@ public class D3SView extends WebView
 
         urlReturned = false;
 
-        List<NameValuePair> params = new LinkedList<NameValuePair>();
-
-        params.add(new BasicNameValuePair("MD", md));
-        params.add(new BasicNameValuePair("TermUrl", this.postbackUrl));
-        params.add(new BasicNameValuePair("PaReq", paReq));
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        String postParams;
         try
         {
-            new UrlEncodedFormEntity(params, HTTP.UTF_8).writeTo(bos);
+            postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s",
+                    URLEncoder.encode(md, "UTF-8"),
+                    URLEncoder.encode(this.postbackUrl, "UTF-8"),
+                    URLEncoder.encode(paReq, "UTF-8")
+            );
         }
-        catch (IOException e)
+        catch (UnsupportedEncodingException e)
         {
+            throw new RuntimeException(e);
         }
 
-        postUrl(acsUrl, bos.toByteArray());
+        postUrl(acsUrl, postParams.getBytes());
     }
 
     class D3SJSInterface
