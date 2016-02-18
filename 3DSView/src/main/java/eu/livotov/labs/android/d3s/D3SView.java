@@ -220,6 +220,9 @@ public class D3SView extends WebView
 
         if (authorizationListener != null)
         {
+            // reset these flags for next time.
+            urlReturned = false;
+            postbackHandled = false;
             authorizationListener.onAuthorizationCompleted(md, pares);
         }
     }
