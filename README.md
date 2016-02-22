@@ -26,13 +26,13 @@ Get It
 - Artifact ID: 3DSView
 
 ```groovy
-compile ('eu.livotov.labs.android:3DSView:1.1.1@aar') {transitive=true}
+compile ('eu.livotov.labs.android:3DSView:1.1.2@aar') {transitive=true}
 
 ```
 
-What's new (1.1.1)
+What's new (1.1.2)
 ==========
-- Added D3SDialog as DialogFragment, so you can perform 3DS authorization using a nice dialog above your business activity
+- Component reuse bug
 - Updated project to the latest android plugin and build tools
 
 Installation
