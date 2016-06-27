@@ -78,6 +78,12 @@ public class D3SView extends WebView
      */
     private String postbackUrl = "https://www.google.com";
 
+    /**
+     * In simple mode we do not try to inject JS code and parse ACS server POST data, we just intercept postback url and call the simplified result listener instead. This is used
+     * for some stacked providers where we need to pass extra provider's postback url to an acs server and then wait for it to complete.
+     */
+    private String stackedModePostbackUrl;
+
     private boolean postbackHandled = false;
 
     /**
@@ -103,10 +109,19 @@ public class D3SView extends WebView
 
             public boolean shouldOverrideUrlLoading(final WebView view, final String url)
             {
-                if (!postbackHandled && url.toLowerCase().contains(postbackUrl.toLowerCase()))
+                final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
+
+                if (!postbackHandled && (!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase()) || (stackedMode && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase()))))
                 {
                     postbackHandled = true;
-                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                    if (!TextUtils.isEmpty(stackedModePostbackUrl))
+                    {
+                        authorizationListener.onAuthorizationCompletedInStackedMode(url);
+                    }
+                    else
+                    {
+                        view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                    }
                     return true;
                 }
                 else
@@ -117,12 +132,22 @@ public class D3SView extends WebView
 
             public void onPageStarted(WebView view, String url, Bitmap icon)
             {
+                final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
+
                 if (!urlReturned && !postbackHandled)
                 {
-                    if (url.toLowerCase().contains(postbackUrl.toLowerCase()))
+                    if ((!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase())) || (stackedMode && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase())))
                     {
                         postbackHandled = true;
-                        view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+
+                        if (!TextUtils.isEmpty(stackedModePostbackUrl))
+                        {
+                            authorizationListener.onAuthorizationCompletedInStackedMode(url);
+                        }
+                        else
+                        {
+                            view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                        }
                         urlReturned = true;
                     }
                     else
@@ -180,6 +205,11 @@ public class D3SView extends WebView
     {
         super(context, attrs, defStyle);
         initUI();
+    }
+
+    public void setStackedMode(String stackedModePostbackUrl)
+    {
+        this.stackedModePostbackUrl = stackedModePostbackUrl;
     }
 
     private void completeAuthorization(String html)
@@ -281,6 +311,9 @@ public class D3SView extends WebView
      */
     public void authorize(final String acsUrl, final String md, final String paReq, final String postbackUrl)
     {
+        urlReturned = false;
+        postbackHandled = false;
+
         if (authorizationListener != null)
         {
             authorizationListener.onAuthorizationStarted(this);
@@ -291,16 +324,10 @@ public class D3SView extends WebView
             this.postbackUrl = postbackUrl;
         }
 
-        urlReturned = false;
-
         String postParams;
         try
         {
-            postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s",
-                    URLEncoder.encode(md, "UTF-8"),
-                    URLEncoder.encode(this.postbackUrl, "UTF-8"),
-                    URLEncoder.encode(paReq, "UTF-8")
-            );
+            postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
         }
         catch (UnsupportedEncodingException e)
         {
