@@ -152,6 +152,7 @@ public class D3SView extends WebView
                     }
                     else
                     {
+                        notifyAuthProgressStarted();
                         super.onPageStarted(view, url, icon);
                     }
                 }
@@ -187,6 +188,14 @@ public class D3SView extends WebView
                 }
             }
         });
+    }
+
+    private void notifyAuthProgressStarted()
+    {
+        if (authorizationListener != null)
+        {
+            authorizationListener.onAuthorizationStarted(this);
+        }
     }
 
     public D3SView(final Context context, final AttributeSet attrs)
@@ -313,11 +322,6 @@ public class D3SView extends WebView
     {
         urlReturned = false;
         postbackHandled = false;
-
-        if (authorizationListener != null)
-        {
-            authorizationListener.onAuthorizationStarted(this);
-        }
 
         if (!TextUtils.isEmpty(postbackUrl))
         {
