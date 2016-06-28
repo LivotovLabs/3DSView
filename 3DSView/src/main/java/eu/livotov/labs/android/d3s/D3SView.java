@@ -116,7 +116,10 @@ public class D3SView extends WebView
                     postbackHandled = true;
                     if (!TextUtils.isEmpty(stackedModePostbackUrl))
                     {
-                        authorizationListener.onAuthorizationCompletedInStackedMode(url);
+                        if (authorizationListener!=null)
+                        {
+                            authorizationListener.onAuthorizationCompletedInStackedMode(url);
+                        }
                     }
                     else
                     {
@@ -142,7 +145,10 @@ public class D3SView extends WebView
 
                         if (!TextUtils.isEmpty(stackedModePostbackUrl))
                         {
-                            authorizationListener.onAuthorizationCompletedInStackedMode(url);
+                            if (authorizationListener!=null)
+                            {
+                                authorizationListener.onAuthorizationCompletedInStackedMode(url);
+                            }
                         }
                         else
                         {
@@ -152,7 +158,6 @@ public class D3SView extends WebView
                     }
                     else
                     {
-                        notifyAuthProgressStarted();
                         super.onPageStarted(view, url, icon);
                     }
                 }
@@ -160,7 +165,7 @@ public class D3SView extends WebView
 
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
             {
-                if (!failingUrl.startsWith(postbackUrl))
+                if (!failingUrl.startsWith(postbackUrl) && authorizationListener!=null)
                 {
                     authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
                 }
@@ -188,14 +193,6 @@ public class D3SView extends WebView
                 }
             }
         });
-    }
-
-    private void notifyAuthProgressStarted()
-    {
-        if (authorizationListener != null)
-        {
-            authorizationListener.onAuthorizationStarted(this);
-        }
     }
 
     public D3SView(final Context context, final AttributeSet attrs)
@@ -322,6 +319,11 @@ public class D3SView extends WebView
     {
         urlReturned = false;
         postbackHandled = false;
+
+        if (authorizationListener != null)
+        {
+            authorizationListener.onAuthorizationStarted(this);
+        }
 
         if (!TextUtils.isEmpty(postbackUrl))
         {
