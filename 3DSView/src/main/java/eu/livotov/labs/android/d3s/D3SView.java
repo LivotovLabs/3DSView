@@ -91,6 +91,8 @@ public class D3SView extends WebView
      */
     private D3SSViewAuthorizationListener authorizationListener = null;
 
+    String capturedHtml;
+
 
     public D3SView(final Context context)
     {
@@ -146,7 +148,7 @@ public class D3SView extends WebView
                         }
                         else
                         {
-                            view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                            completeAuthorization(capturedHtml);
                         }
                         urlReturned = true;
                     }
@@ -157,6 +159,16 @@ public class D3SView extends WebView
                 }
             }
 
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+
+                if (url.toLowerCase().contains(postbackUrl.toLowerCase())) {
+                    return;
+                }
+                view.loadUrl(String.format("javascript:window.%s.captureHtml(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+            }
+;
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
             {
                 if (!failingUrl.startsWith(postbackUrl))
@@ -348,6 +360,11 @@ public class D3SView extends WebView
         public void processHTML(final String paramString)
         {
             completeAuthorization(paramString);
+        }
+
+        @android.webkit.JavascriptInterface
+        public void captureHtml(String html) {
+            capturedHtml = html;
         }
     }
 }
