@@ -87,6 +87,8 @@ public class D3SView extends WebView
 
     private AtomicBoolean postbackHandled = new AtomicBoolean(false);
 
+    private boolean initialPageLoadCompleted = false;
+
     /**
      * Callback to send authorization events to
      */
@@ -167,7 +169,11 @@ public class D3SView extends WebView
                 if (url.toLowerCase().contains(postbackUrl.toLowerCase())) {
                     return;
                 }
-                view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                if (!initialPageLoadCompleted) {
+                    initialPageLoadCompleted = true;
+                } else {
+                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                }
             }
 ;
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
@@ -332,6 +338,7 @@ public class D3SView extends WebView
     {
         urlReturned = false;
         postbackHandled.set(false);
+        initialPageLoadCompleted = false;
 
         if (authorizationListener != null)
         {
