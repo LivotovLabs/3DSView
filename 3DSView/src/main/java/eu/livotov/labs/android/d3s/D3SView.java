@@ -168,7 +168,7 @@ public class D3SView extends WebView
                     return;
                 }
 
-                	view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
             }
 ;
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
