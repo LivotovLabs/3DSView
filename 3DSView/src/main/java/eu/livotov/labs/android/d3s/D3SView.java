@@ -364,9 +364,9 @@ public class D3SView extends WebView
         }
 
         @android.webkit.JavascriptInterface
-        public void processHTML(final String paramString)
+        public void processHTML(final String html)
         {
-            completeAuthorizationIfPossible(paramString);
+            completeAuthorizationIfPossible(html);
         }
     }
 }
