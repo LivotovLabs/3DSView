@@ -228,7 +228,7 @@ public class D3SView extends WebView
 
     private void completeAuthorizationIfPossible(String html)
     {
-    		// If the postback has already been handled, stop now
+        // If the postback has already been handled, stop now
         if (postbackHandled.get()) {
             return;
         }
@@ -241,14 +241,14 @@ public class D3SView extends WebView
         if (mdMatcher.find()) {
             md = mdMatcher.group(1);
         } else {
-        		return; // Not Found
+            return; // Not Found
         }
         
         Matcher paresMatcher = paresFinder.matcher(html);
         if (paresMatcher.find()) {
             pares = paresMatcher.group(1);
         } else {
-        		return; // Not Found
+            return; // Not Found
         }
 
         // Now extract the values from the previously captured form elements
@@ -256,14 +256,14 @@ public class D3SView extends WebView
         if (mdValueMatcher.find()) {
         		md = mdValueMatcher.group(1);
         } else {
-        		return; // Not Found
+            return; // Not Found
         }
 
         Matcher paresValueMatcher = valuePattern.matcher(pares);
         if (paresValueMatcher.find()){
             pares = paresValueMatcher.group(1);
         } else {
-    			return; // Not Found
+            return; // Not Found
         }
         
         // If we get to this point, we've definitely got values for both the MD and PaRes
