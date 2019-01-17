@@ -9,25 +9,13 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.ValueCallback;
 
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 
 /**
@@ -57,9 +45,7 @@ import javax.xml.transform.stream.StreamSource;
  */
 public class D3SView extends WebView
 {
-	
-	private static final Logger LOGGER = Logger.getLogger( D3SView.class.getName() );
-	
+
     /**
      * Namespace for JS bridge
      */
