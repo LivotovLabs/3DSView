@@ -119,8 +119,6 @@ public class D3SView extends WebView
                 {
                     if (!TextUtils.isEmpty(stackedModePostbackUrl))
                     {
-                        if (authorizationListener!=null)
-                        {
                         if (postbackHandled.compareAndSet(false, true)) {
                             authorizationListener.onAuthorizationCompletedInStackedMode(url);
                         }
@@ -147,8 +145,6 @@ public class D3SView extends WebView
                     {
                         if (!TextUtils.isEmpty(stackedModePostbackUrl))
                         {
-                            if (authorizationListener!=null)
-                            {
                             if (postbackHandled.compareAndSet(false, true)) {
                                 authorizationListener.onAuthorizationCompletedInStackedMode(url);
                             }
@@ -179,10 +175,10 @@ public class D3SView extends WebView
                     view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                 }
             }
-
+            ;
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
             {
-                if (!failingUrl.startsWith(postbackUrl) && authorizationListener!=null)
+                if (!failingUrl.startsWith(postbackUrl))
                 {
                     authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
                 }
