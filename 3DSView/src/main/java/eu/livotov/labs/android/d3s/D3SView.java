@@ -87,8 +87,6 @@ public class D3SView extends WebView
 
     private AtomicBoolean postbackHandled = new AtomicBoolean(false);
 
-    private boolean initialPageLoadCompleted = false;
-
     /**
      * Callback to send authorization events to
      */
@@ -169,11 +167,8 @@ public class D3SView extends WebView
                 if (url.toLowerCase().contains(postbackUrl.toLowerCase())) {
                     return;
                 }
-                if (!initialPageLoadCompleted) {
-                    initialPageLoadCompleted = true;
-                } else {
-                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                }
+
+                view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
             }
             ;
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
@@ -231,51 +226,50 @@ public class D3SView extends WebView
         this.stackedModePostbackUrl = stackedModePostbackUrl;
     }
 
-    private void completeAuthorization(String html)
+    private void completeAuthorizationIfPossible(String html)
     {
+        // If the postback has already been handled, stop now
         if (postbackHandled.get()) {
             return;
         }
 
+        // Try and find the MD and PaRes form elements in the supplied html
         String md = "";
         String pares = "";
 
-        Matcher localMatcher1 = mdFinder.matcher(html);
-        Matcher localMatcher2 = paresFinder.matcher(html);
-
-        if (localMatcher1.find())
-        {
-            md = localMatcher1.group(1);
+        Matcher mdMatcher = mdFinder.matcher(html);
+        if (mdMatcher.find()) {
+            md = mdMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+        
+        Matcher paresMatcher = paresFinder.matcher(html);
+        if (paresMatcher.find()) {
+            pares = paresMatcher.group(1);
+        } else {
+            return; // Not Found
         }
 
-        if (localMatcher2.find())
-        {
-            pares = localMatcher2.group(1);
+        // Now extract the values from the previously captured form elements
+        Matcher mdValueMatcher = valuePattern.matcher(md);
+        if (mdValueMatcher.find()) {
+        		md = mdValueMatcher.group(1);
+        } else {
+            return; // Not Found
         }
 
-        if (!TextUtils.isEmpty(md))
-        {
-            Matcher valueMatcher = valuePattern.matcher(md);
-            if (valueMatcher.find())
-            {
-                md = valueMatcher.group(1);
-            }
+        Matcher paresValueMatcher = valuePattern.matcher(pares);
+        if (paresValueMatcher.find()){
+            pares = paresValueMatcher.group(1);
+        } else {
+            return; // Not Found
         }
+        
+        // If we get to this point, we've definitely got values for both the MD and PaRes
 
-        if (!TextUtils.isEmpty(pares))
-        {
-            Matcher valueMatcher = valuePattern.matcher(pares);
-            if (valueMatcher.find())
-            {
-                pares = valueMatcher.group(1);
-            }
-        }
-
-        // If we didn't find both MD and PaRes, don't continue
-        if (TextUtils.isEmpty(md) || TextUtils.isEmpty(pares)) {
-            return;
-        }
-
+        // The postbackHandled check is just to ensure we've not already called back. 
+        // We don't want onAuthorizationCompleted to be called twice.
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null)
         {
             authorizationListener.onAuthorizationCompleted(md, pares);
@@ -338,7 +332,6 @@ public class D3SView extends WebView
     {
         urlReturned = false;
         postbackHandled.set(false);
-        initialPageLoadCompleted = false;
 
         if (authorizationListener != null)
         {
@@ -371,9 +364,9 @@ public class D3SView extends WebView
         }
 
         @android.webkit.JavascriptInterface
-        public void processHTML(final String paramString)
+        public void processHTML(final String html)
         {
-            completeAuthorization(paramString);
+            completeAuthorizationIfPossible(html);
         }
     }
 }
