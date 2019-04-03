@@ -112,8 +112,8 @@ public class D3SView extends WebView
             {
                 final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
 
-                if (!postbackHandled.get() && (!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase()) || (stackedMode
-                        && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase()))))
+                if (!postbackHandled.get() && (!stackedMode && url.toLowerCase().startsWith(postbackUrl.toLowerCase()) || (stackedMode
+                        && url.toLowerCase().startsWith(stackedModePostbackUrl.toLowerCase()))))
                 {
                     if (!TextUtils.isEmpty(stackedModePostbackUrl))
                     {
@@ -139,7 +139,7 @@ public class D3SView extends WebView
 
                 if (!urlReturned && !postbackHandled.get())
                 {
-                    if ((!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase())) || (stackedMode && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase())))
+                    if ((!stackedMode && url.toLowerCase().startsWith(postbackUrl.toLowerCase())) || (stackedMode && url.toLowerCase().startsWith(stackedModePostbackUrl.toLowerCase())))
                     {
                         if (!TextUtils.isEmpty(stackedModePostbackUrl))
                         {
@@ -164,7 +164,7 @@ public class D3SView extends WebView
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
 
-                if (url.toLowerCase().contains(postbackUrl.toLowerCase())) {
+                if (url.toLowerCase().startsWith(postbackUrl.toLowerCase())) {
                     return;
                 }
 
