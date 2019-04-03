@@ -44,7 +44,7 @@ add our bintray snapshots repository url first: https://dl.bintray.com/livotovla
 ```groovy
 dependencies {
     ...
-    compile 'eu.livotov.labs.android:3dsview:1.1.1@aar'
+    compile 'eu.livotov.labs.android:3DSView:1.1.2@aar'
     ...
 }
 ```

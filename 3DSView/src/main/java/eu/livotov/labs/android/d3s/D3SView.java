@@ -13,6 +13,7 @@ import android.webkit.WebViewClient;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,7 +85,9 @@ public class D3SView extends WebView
      */
     private String stackedModePostbackUrl;
 
-    private boolean postbackHandled = false;
+    private AtomicBoolean postbackHandled = new AtomicBoolean(false);
+
+    private boolean initialPageLoadCompleted = false;
 
     /**
      * Callback to send authorization events to
@@ -111,13 +114,14 @@ public class D3SView extends WebView
             {
                 final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
 
-                if (!postbackHandled && (!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase()) || (stackedMode && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase()))))
+                if (!postbackHandled.get() && (!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase()) || (stackedMode
+                        && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase()))))
                 {
-                    postbackHandled = true;
                     if (!TextUtils.isEmpty(stackedModePostbackUrl))
                     {
                         if (authorizationListener!=null)
                         {
+                        if (postbackHandled.compareAndSet(false, true)) {
                             authorizationListener.onAuthorizationCompletedInStackedMode(url);
                         }
                     }
@@ -137,16 +141,15 @@ public class D3SView extends WebView
             {
                 final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
 
-                if (!urlReturned && !postbackHandled)
+                if (!urlReturned && !postbackHandled.get())
                 {
                     if ((!stackedMode && url.toLowerCase().contains(postbackUrl.toLowerCase())) || (stackedMode && url.toLowerCase().contains(stackedModePostbackUrl.toLowerCase())))
                     {
-                        postbackHandled = true;
-
                         if (!TextUtils.isEmpty(stackedModePostbackUrl))
                         {
                             if (authorizationListener!=null)
                             {
+                            if (postbackHandled.compareAndSet(false, true)) {
                                 authorizationListener.onAuthorizationCompletedInStackedMode(url);
                             }
                         }
@@ -160,6 +163,20 @@ public class D3SView extends WebView
                     {
                         super.onPageStarted(view, url, icon);
                     }
+                }
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+
+                if (url.toLowerCase().contains(postbackUrl.toLowerCase())) {
+                    return;
+                }
+                if (!initialPageLoadCompleted) {
+                    initialPageLoadCompleted = true;
+                } else {
+                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                 }
             }
 
@@ -220,6 +237,10 @@ public class D3SView extends WebView
 
     private void completeAuthorization(String html)
     {
+        if (postbackHandled.get()) {
+            return;
+        }
+
         String md = "";
         String pares = "";
 
@@ -254,11 +275,13 @@ public class D3SView extends WebView
             }
         }
 
-        if (authorizationListener != null)
+        // If we didn't find both MD and PaRes, don't continue
+        if (TextUtils.isEmpty(md) || TextUtils.isEmpty(pares)) {
+            return;
+        }
+
+        if (postbackHandled.compareAndSet(false, true) && authorizationListener != null)
         {
-            // reset these flags for next time.
-            urlReturned = false;
-            postbackHandled = false;
             authorizationListener.onAuthorizationCompleted(md, pares);
         }
     }
@@ -318,7 +341,8 @@ public class D3SView extends WebView
     public void authorize(final String acsUrl, final String md, final String paReq, final String postbackUrl)
     {
         urlReturned = false;
-        postbackHandled = false;
+        postbackHandled.set(false);
+        initialPageLoadCompleted = false;
 
         if (authorizationListener != null)
         {
