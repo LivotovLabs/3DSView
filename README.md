@@ -30,10 +30,10 @@ compile ('eu.livotov.labs.android:3DSView:1.1.2@aar') {transitive=true}
 
 ```
 
-What's new (1.1.2)
+What's new (1.1.2.9)
 ==========
-- Component reuse bug
-- Updated project to the latest android plugin and build tools
+- Latest pull requests merged
+- Code reading
 
 Installation
 ============
