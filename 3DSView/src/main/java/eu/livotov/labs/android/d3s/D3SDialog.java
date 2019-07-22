@@ -2,9 +2,9 @@ package eu.livotov.labs.android.d3s;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,20 +40,6 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
         dialog.md = md;
         dialog.pareq = paReq;
         dialog.postback = postbackUrl;
-        dialog.authorizationListener = listener;
-
-        return dialog;
-    }
-
-    public static D3SDialog newInstance(final String acsUrl, final String md, final String paReq, final String acsPostbackUrl, final String stackedModePostbackUrl, D3SDialogListener listener)
-    {
-        D3SDialog dialog = new D3SDialog();
-
-        dialog.acs = acsUrl;
-        dialog.md = md;
-        dialog.pareq = paReq;
-        dialog.postback = acsPostbackUrl;
-        dialog.stackedModePostbackUrl = stackedModePostbackUrl;
         dialog.authorizationListener = listener;
 
         return dialog;
@@ -102,11 +88,6 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
     public void onViewCreated(final View view, final Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
-
-        if (!TextUtils.isEmpty(stackedModePostbackUrl))
-        {
-            authenticator.setStackedMode(stackedModePostbackUrl);
-        }
 
         if (TextUtils.isEmpty(postback))
         {
@@ -172,28 +153,10 @@ public class D3SDialog extends DialogFragment implements D3SSViewAuthorizationLi
         });
     }
 
-    @Override
-    public void onAuthorizationCompletedInStackedMode(final String finalizationUrl)
-    {
-        handler.post(new Runnable()
-        {
-            public void run()
-            {
-                dismiss();
-                if (authorizationListener != null)
-                {
-                    authorizationListener.onAuthorizationCompletedInStackedMode(finalizationUrl);
-                }
-            }
-        });
-    }
-
     public interface D3SDialogListener
     {
         void onAuthorizationCompleted(final String md, final String paRes);
 
         void onAuthorizationFailed(final int code, final String message, final String failedUrl);
-
-        void onAuthorizationCompletedInStackedMode(String finalizationUrl);
     }
 }

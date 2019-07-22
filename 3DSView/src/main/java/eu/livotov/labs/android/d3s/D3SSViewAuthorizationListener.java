@@ -44,9 +44,4 @@ public interface D3SSViewAuthorizationListener
      */
     void onAuthorizationWebPageLoadingError(int errorCode, String description, String failingUrl);
 
-    /**
-     * Called on authorization completion, while in stacked mode.
-     * @param finalizationUrl postback url with all extra query parameters that was sent from third-party post-acs server.
-     */
-    void onAuthorizationCompletedInStackedMode(String finalizationUrl);
 }
