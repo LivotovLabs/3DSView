@@ -53,14 +53,15 @@ public class D3SView extends WebView {
     /**
      * Pattern to find the MD value in the ACS server post response
      */
-    private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", 32);
+    private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", Pattern.DOTALL);
 
     /**
      * Pattern to find the PaRes value in the ACS server post response
      */
-    private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", 32);
+    private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", Pattern.DOTALL);
+    private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
-    private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", 32);
+    private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", Pattern.DOTALL);
 
     /**
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
@@ -71,6 +72,13 @@ public class D3SView extends WebView {
     private AtomicBoolean postbackHandled = new AtomicBoolean(false);
 
     /**
+     * 3-D Secure v2 (AKA Strong Customer Authentication).
+     * This is an indicator as to whether the payment is 3-D Secure v1 or v2 is being performed, so the library has a
+     * hint to know what field(s) to search for (and avoid unnecessary regular expressions)
+     */
+    private boolean is3dsV2;
+
+    /**
      * Callback to send authorization events to
      */
     private D3SSViewAuthorizationListener authorizationListener = null;
@@ -79,7 +87,6 @@ public class D3SView extends WebView {
     public D3SView(final Context context) {
         super(context);
         initUI();
-
     }
 
     private void initUI() {
@@ -173,51 +180,86 @@ public class D3SView extends WebView {
                     return;
                 }
 
-                // Try and find the MD and PaRes form elements in the supplied html
-                String md = "";
-                String pares = "";
-
-                Matcher mdMatcher = mdFinder.matcher(html);
-                if (mdMatcher.find()) {
-                    md = mdMatcher.group(1);
+                if(is3dsV2){
+                    match3DSV2Parameters(html);
                 } else {
-                    return; // Not Found
+                    match3DSV1Parameters(html);
                 }
 
-                Matcher paresMatcher = paresFinder.matcher(html);
-                if (paresMatcher.find()) {
-                    pares = paresMatcher.group(1);
-                } else {
-                    return; // Not Found
-                }
-
-                // Now extract the values from the previously captured form elements
-                Matcher mdValueMatcher = valuePattern.matcher(md);
-                if (mdValueMatcher.find()) {
-                    md = mdValueMatcher.group(1);
-                } else {
-                    return; // Not Found
-                }
-
-                Matcher paresValueMatcher = valuePattern.matcher(pares);
-                if (paresValueMatcher.find()) {
-                    pares = paresValueMatcher.group(1);
-                } else {
-                    return; // Not Found
-                }
-
-                // If we get to this point, we've definitely got values for both the MD and PaRes
-
-                // The postbackHandled check is just to ensure we've not already called back.
-                // We don't want onAuthorizationCompleted to be called twice.
-                if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
-                    authorizationListener.onAuthorizationCompleted(md, pares);
-                }
             }
         };
         Thread thread = new Thread(runnable);
         thread.start();
 
+    }
+
+    private void match3DSV2Parameters(String html) {
+
+        // Try and find the CRes in the supplied html
+
+        String cres = "";
+
+        Matcher cresMatcher = cresFinder.matcher(html);
+        if (cresMatcher.find()) {
+            cres = cresMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        Matcher cresValueMatcher = valuePattern.matcher(cres);
+        if (cresValueMatcher.find()) {
+            cres = cresValueMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
+            authorizationListener.onAuthorizationCompleted(cres);
+        }
+    }
+
+    private void match3DSV1Parameters(String html) {
+
+        // Try and find the MD and PaRes form elements in the supplied html
+        String md = "";
+        String pares = "";
+
+        Matcher mdMatcher = mdFinder.matcher(html);
+        if (mdMatcher.find()) {
+            md = mdMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        Matcher paresMatcher = paresFinder.matcher(html);
+        if (paresMatcher.find()) {
+            pares = paresMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        // Now extract the values from the previously captured form elements
+        Matcher mdValueMatcher = valuePattern.matcher(md);
+        if (mdValueMatcher.find()) {
+            md = mdValueMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        Matcher paresValueMatcher = valuePattern.matcher(pares);
+        if (paresValueMatcher.find()) {
+            pares = paresValueMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        // If we get to this point, we've definitely got values for both the MD and PaRes
+
+        // The postbackHandled check is just to ensure we've not already called back.
+        // We don't want onAuthorizationCompleted to be called twice.
+        if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
+            authorizationListener.onAuthorizationCompleted(md, pares);
+        }
     }
 
     /**
@@ -230,26 +272,37 @@ public class D3SView extends WebView {
     }
 
     /**
-     * Starts 3DS authorization
+     * Starts 3DS v1 authorization
      *
      * @param acsUrl ACS server url, returned by the credit card processing gateway
      * @param md     MD parameter, returned by the credit card processing gateway
      * @param paReq  PaReq parameter, returned by the credit card processing gateway
      */
     public void authorize(final String acsUrl, final String md, final String paReq) {
-        authorize(acsUrl, md, paReq, null);
+        authorize(acsUrl, null, md, paReq, null);
+    }
+
+    /**
+     * Starts 3-D Secure v2 authentication
+     * @param acsUrl ACS server url - supplied by the payment gateway
+     * @param creq - CReq to post to the ACS
+     * @param postbackUrl - the URL to wait for, so the CRes can be extracted
+     */
+    public void authorize3dsV2(final String acsUrl, final String creq, final String postbackUrl) {
+        authorize(acsUrl, creq, null, null, postbackUrl);
     }
 
     /**
      * Starts 3DS authorization
      *
      * @param acsUrl      ACS server url, returned by the credit card processing gateway
+     * @param creq        CReq parameter (replaces MD and PaReq).
      * @param md          MD parameter, returned by the credit card processing gateway
      * @param paReq       PaReq parameter, returned by the credit card processing gateway
      * @param postbackUrl custom postback url for intercepting ACS server result posting. You may use any url you like
      *                    here, if you need, even non existing ones.
      */
-    public void authorize(final String acsUrl, final String md, final String paReq, final String postbackUrl) {
+    public void authorize(final String acsUrl, final String creq, final String md, final String paReq, final String postbackUrl) {
         postbackHandled.set(false);
 
         if (authorizationListener != null) {
@@ -262,7 +315,14 @@ public class D3SView extends WebView {
 
         String postParams;
         try {
-            postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
+            if(creq != null){
+                // 3-D Secure v2
+                is3dsV2 = true;
+                postParams = String.format(Locale.US, "creq=%1$s", URLEncoder.encode(creq, "UTF-8"));
+            } else {
+                // 3-D Secure v1
+                postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
+            }
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
