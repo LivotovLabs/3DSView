@@ -51,16 +51,16 @@ public class D3SView extends WebView {
     private static String JavaScriptNS = "D3SJS";
 
     /**
-     * Pattern to find the MD value in the ACS server post response
+     * Patterns to find the various fields in the ACS server post response
      */
     private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", Pattern.DOTALL);
-
-    /**
-     * Pattern to find the PaRes value in the ACS server post response
-     */
     private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", Pattern.DOTALL);
     private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+    private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Pattern to find the value from the result of the above searches
+     */
     private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", Pattern.DOTALL);
 
     /**
@@ -198,6 +198,7 @@ public class D3SView extends WebView {
         // Try and find the CRes in the supplied html
 
         String cres = "";
+        String threeDSSessionData = null;
 
         Matcher cresMatcher = cresFinder.matcher(html);
         if (cresMatcher.find()) {
@@ -213,8 +214,19 @@ public class D3SView extends WebView {
             return; // Not Found
         }
 
+        Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
+        if (threeDSSessionDataMatcher.find()) {
+            String fieldResult = threeDSSessionDataMatcher.group(1);
+            if(fieldResult != null) {
+                Matcher threeDSSessionDataValueMatcher = valuePattern.matcher(fieldResult);
+                if (threeDSSessionDataValueMatcher.find()) {
+                    threeDSSessionData = threeDSSessionDataValueMatcher.group(1);
+                }
+            }
+        }
+
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
-            authorizationListener.onAuthorizationCompleted(cres);
+            authorizationListener.onAuthorizationCompleted3dsV2(cres, threeDSSessionData);
         }
     }
 
@@ -279,17 +291,18 @@ public class D3SView extends WebView {
      * @param paReq  PaReq parameter, returned by the credit card processing gateway
      */
     public void authorize(final String acsUrl, final String md, final String paReq) {
-        authorize(acsUrl, null, md, paReq, null);
+        authorize(acsUrl, null, md, paReq, null, null);
     }
 
     /**
      * Starts 3-D Secure v2 authentication
      * @param acsUrl ACS server url - supplied by the payment gateway
      * @param creq - CReq to post to the ACS
+     * @param threeDSSessionData - Session data to pass to the ACS. This will be reflected back in the callback
      * @param postbackUrl - the URL to wait for, so the CRes can be extracted
      */
-    public void authorize3dsV2(final String acsUrl, final String creq, final String postbackUrl) {
-        authorize(acsUrl, creq, null, null, postbackUrl);
+    public void authorize(final String acsUrl, final String creq, final String threeDSSessionData, final String postbackUrl) {
+        authorize(acsUrl, creq, null, null,  threeDSSessionData, postbackUrl);
     }
 
     /**
@@ -302,7 +315,7 @@ public class D3SView extends WebView {
      * @param postbackUrl custom postback url for intercepting ACS server result posting. You may use any url you like
      *                    here, if you need, even non existing ones.
      */
-    public void authorize(final String acsUrl, final String creq, final String md, final String paReq, final String postbackUrl) {
+    public void authorize(final String acsUrl, final String creq, final String md, final String paReq, final String threeDSSessionData, final String postbackUrl) {
         postbackHandled.set(false);
 
         if (authorizationListener != null) {
@@ -318,7 +331,7 @@ public class D3SView extends WebView {
             if(creq != null){
                 // 3-D Secure v2
                 is3dsV2 = true;
-                postParams = String.format(Locale.US, "creq=%1$s", URLEncoder.encode(creq, "UTF-8"));
+                postParams = String.format(Locale.US, "creq=%1$s&threeDSSessionData=%2$s", URLEncoder.encode(creq, "UTF-8"), URLEncoder.encode(threeDSSessionData, "UTF-8"));
             } else {
                 // 3-D Secure v1
                 postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));

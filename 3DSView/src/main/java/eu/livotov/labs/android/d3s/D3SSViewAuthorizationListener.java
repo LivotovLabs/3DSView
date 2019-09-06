@@ -30,8 +30,9 @@ public interface D3SSViewAuthorizationListener
      * This is called when 3-D Secure v2 completes
      *
      * @param cres
+     * @param threeDSSessionData - session data from request that's been reflected back in the callback
      */
-    void onAuthorizationCompleted(final String cres);
+    void onAuthorizationCompleted3dsV2(final String cres, final String threeDSSessionData);
 
     /**
      * Called when authorization process is started and web page from ACS server is being loaded.
