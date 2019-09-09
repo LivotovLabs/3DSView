@@ -9,6 +9,7 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceResponse;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -96,50 +97,46 @@ public class D3SView extends WebView {
 
         setWebViewClient(new WebViewClient() {
 
-            public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
-                if (!postbackHandled.get() && (url.toLowerCase().startsWith(postbackUrl.toLowerCase()))) {
-                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                    return true; // We don't want the postback URL to be processed .. as the data is about to be grabbed
+            @Override
+            public WebResourceResponse shouldInterceptRequest (WebView view, String url) {
+                if (isPostbackUrl(url)) {
+                    // Wait for the form data to be processed in the other thread.
+                    // 1.5s should be more than enough
+                    //
+                    // If for whatever reason the form data isn't captured successfully, this carries on and posts to
+                    // the callback URL (AKA postback URL)
+                    try {
+                        Thread.sleep(1500);
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
                 }
-
-                return super.shouldOverrideUrlLoading(view, url);
+                return null;
             }
 
-
+            /*
+             * In this lifecycle hook the HTML is available, although all resources (CSS, Images etc) may not be
+             * We are merely processing the HTML though, so hooking in here is fine
+             */
             @Override
             public void onPageCommitVisible(WebView view, String url) {
-                if (!url.equals(postbackUrl)) {
+
+                if (!isPostbackUrl(url)) {
                     view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                 }
 
                 super.onPageCommitVisible(view, url);
             }
 
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap icon) {
-
-                if (url.equals(postbackUrl)) {
-                    return; // Do nothing
-                }
-
-                view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                super.onPageStarted(view, url, icon);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-
-                if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.LOLLIPOP_MR1 && !url.equals(postbackUrl)) {
-                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                }
-
-                super.onPageFinished(view, url);
-            }
-
+            //
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                if (!failingUrl.startsWith(postbackUrl)) {
+                if (!isPostbackUrl(failingUrl)) {
                     authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
                 }
+            }
+
+            private boolean isPostbackUrl(String url) {
+                return url.toLowerCase().startsWith(postbackUrl.toLowerCase());
             }
 
         });
