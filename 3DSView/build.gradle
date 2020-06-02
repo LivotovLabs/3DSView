@@ -15,12 +15,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "28.0.2"
+    compileSdkVersion 28
+    buildToolsVersion "28.0.3"
 
     defaultConfig {
         minSdkVersion 10
-        targetSdkVersion 26
+        targetSdkVersion 28
         versionCode 1
         versionName "3DSView"
     }
@@ -33,9 +33,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:26+'
-    compile 'com.android.support:support-v4:26+'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 }
 
-apply from: 'bintray-publish.gradle'
+//apply from: 'bintray-publish.gradle'

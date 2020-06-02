@@ -15,10 +15,24 @@ public interface D3SSViewAuthorizationListener
      * Called when remote banking ACS server finishes 3DS authorization. Now you may pass the returned
      * MD and PaRes parameters to your credit card processing gateway for finalizing the transaction.
      *
+     * This is called when 3-D Secure v1 completes
+     *
      * @param md    MD parameter, sent by ACS server
      * @param paRes paRes parameter, sent by ACS server
      */
+    @Deprecated // 3-D Secure v1 ... this will disappear by the end of 2020
     void onAuthorizationCompleted(final String md, final String paRes);
+
+    /**
+     * Called when remote banking ACS server finishes 3DS authorization. You must
+     * pass the CRes value to the payment processing gateway to complete the transaction.
+     *
+     * This is called when 3-D Secure v2 completes
+     *
+     * @param cres
+     * @param threeDSSessionData - session data from request that's been reflected back in the callback
+     */
+    void onAuthorizationCompleted3dsV2(final String cres, final String threeDSSessionData);
 
     /**
      * Called when authorization process is started and web page from ACS server is being loaded.
@@ -44,9 +58,4 @@ public interface D3SSViewAuthorizationListener
      */
     void onAuthorizationWebPageLoadingError(int errorCode, String description, String failingUrl);
 
-    /**
-     * Called on authorization completion, while in stacked mode.
-     * @param finalizationUrl postback url with all extra query parameters that was sent from third-party post-acs server.
-     */
-    void onAuthorizationCompletedInStackedMode(String finalizationUrl);
 }

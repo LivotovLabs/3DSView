@@ -9,6 +9,7 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceResponse;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -43,8 +44,7 @@ import java.util.regex.Pattern;
  * with the parameters, came from banking ACS server. Now you can use those parameters in your bckend processing server
  * to finalize the payment.</p>
  */
-public class D3SView extends WebView
-{
+public class D3SView extends WebView {
 
     /**
      * Namespace for JS bridge
@@ -52,26 +52,17 @@ public class D3SView extends WebView
     private static String JavaScriptNS = "D3SJS";
 
     /**
-     * Pattern to find the MD value in the ACS server post response
+     * Patterns to find the various fields in the ACS server post response
      */
-    private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", 32);
+    private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", Pattern.DOTALL);
+    private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", Pattern.DOTALL);
+    private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+    private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     /**
-     * Pattern to find the PaRes value in the ACS server post response
+     * Pattern to find the value from the result of the above searches
      */
-    private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", 32);
-
-    private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", 32);
-
-    /**
-     * Internal flag for tracking web page url changes in WebView
-     */
-    private boolean urlReturned = false;
-
-    /**
-     * When set to <b>true</b>, SSL certificate errors and self-signed certificates errors will be ignored.
-     */
-    private boolean debugMode = false;
+    private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", Pattern.DOTALL);
 
     /**
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
@@ -79,13 +70,14 @@ public class D3SView extends WebView
      */
     private String postbackUrl = "https://www.google.com";
 
-    /**
-     * In simple mode we do not try to inject JS code and parse ACS server POST data, we just intercept postback url and call the simplified result listener instead. This is used
-     * for some stacked providers where we need to pass extra provider's postback url to an acs server and then wait for it to complete.
-     */
-    private String stackedModePostbackUrl;
-
     private AtomicBoolean postbackHandled = new AtomicBoolean(false);
+
+    /**
+     * 3-D Secure v2 (AKA Strong Customer Authentication).
+     * This is an indicator as to whether the payment is 3-D Secure v1 or v2 is being performed, so the library has a
+     * hint to know what field(s) to search for (and avoid unnecessary regular expressions)
+     */
+    private boolean is3dsV2;
 
     /**
      * Callback to send authorization events to
@@ -93,145 +85,149 @@ public class D3SView extends WebView
     private D3SSViewAuthorizationListener authorizationListener = null;
 
 
-    public D3SView(final Context context)
-    {
+    public D3SView(final Context context) {
         super(context);
         initUI();
     }
 
-    private void initUI()
-    {
+    private void initUI() {
         getSettings().setJavaScriptEnabled(true);
         getSettings().setBuiltInZoomControls(true);
         addJavascriptInterface(new D3SJSInterface(), JavaScriptNS);
 
-        setWebViewClient(new WebViewClient()
-        {
-
-            public boolean shouldOverrideUrlLoading(final WebView view, final String url)
-            {
-                final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
-
-                if (!postbackHandled.get() && (!stackedMode && url.toLowerCase().startsWith(postbackUrl.toLowerCase()) || (stackedMode
-                        && url.toLowerCase().startsWith(stackedModePostbackUrl.toLowerCase()))))
-                {
-                    if (!TextUtils.isEmpty(stackedModePostbackUrl))
-                    {
-                        if (postbackHandled.compareAndSet(false, true)) {
-                            authorizationListener.onAuthorizationCompletedInStackedMode(url);
-                        }
-                    }
-                    else
-                    {
-                        view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                    }
-                    return true;
-                }
-                else
-                {
-                    return super.shouldOverrideUrlLoading(view, url);
-                }
-            }
-
-            public void onPageStarted(WebView view, String url, Bitmap icon)
-            {
-                final boolean stackedMode = !TextUtils.isEmpty(stackedModePostbackUrl);
-
-                if (!urlReturned && !postbackHandled.get())
-                {
-                    if ((!stackedMode && url.toLowerCase().startsWith(postbackUrl.toLowerCase())) || (stackedMode && url.toLowerCase().startsWith(stackedModePostbackUrl.toLowerCase())))
-                    {
-                        if (!TextUtils.isEmpty(stackedModePostbackUrl))
-                        {
-                            if (postbackHandled.compareAndSet(false, true)) {
-                                authorizationListener.onAuthorizationCompletedInStackedMode(url);
-                            }
-                        }
-                        else
-                        {
-                            view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
-                        }
-                        urlReturned = true;
-                    }
-                    else
-                    {
-                        super.onPageStarted(view, url, icon);
-                    }
-                }
-            }
+        setWebViewClient(new WebViewClient() {
 
             @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
+            public WebResourceResponse shouldInterceptRequest (WebView view, String url) {
+                if (isPostbackUrl(url)) {
+                    // Wait for the form data to be processed in the other thread.
+                    // 1.5s should be more than enough
+                    //
+                    // If for whatever reason the form data isn't captured successfully, this carries on and posts to
+                    // the callback URL (AKA postback URL)
+                    try {
+                        Thread.sleep(1500);
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
+                }
+                return null;
+            }
 
-                if (url.toLowerCase().startsWith(postbackUrl.toLowerCase())) {
-                    return;
+            /*
+             * In this lifecycle hook the HTML is available, although all resources (CSS, Images etc) may not be
+             * We are merely processing the HTML though, so hooking in here is fine
+             */
+            @Override
+            public void onPageCommitVisible(WebView view, String url) {
+
+                if (!isPostbackUrl(url)) {
+                    view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
                 }
 
-                view.loadUrl(String.format("javascript:window.%s.processHTML(document.getElementsByTagName('html')[0].innerHTML);", JavaScriptNS));
+                super.onPageCommitVisible(view, url);
             }
-            ;
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
-            {
-                if (!failingUrl.startsWith(postbackUrl))
-                {
+
+            //
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (!isPostbackUrl(failingUrl)) {
                     authorizationListener.onAuthorizationWebPageLoadingError(errorCode, description, failingUrl);
                 }
             }
 
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error)
-            {
-                if (debugMode)
-                {
-                    handler.proceed();
-                }
+            private boolean isPostbackUrl(String url) {
+                return url.toLowerCase().startsWith(postbackUrl.toLowerCase());
             }
-
 
         });
 
-        setWebChromeClient(new WebChromeClient()
-        {
+        setWebChromeClient(new WebChromeClient() {
 
-            public void onProgressChanged(WebView view, int newProgress)
-            {
-                if (authorizationListener != null)
-                {
+            public void onProgressChanged(WebView view, int newProgress) {
+                if (authorizationListener != null) {
                     authorizationListener.onAuthorizationWebPageLoadingProgressChanged(newProgress);
                 }
             }
         });
     }
 
-    public D3SView(final Context context, final AttributeSet attrs)
-    {
+    public D3SView(final Context context, final AttributeSet attrs) {
         super(context, attrs);
         initUI();
     }
 
-    public D3SView(final Context context, final AttributeSet attrs, final int defStyle)
-    {
+    public D3SView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
         initUI();
     }
 
-    public D3SView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing)
-    {
+    public D3SView(final Context context, final AttributeSet attrs, final int defStyle, final boolean privateBrowsing) {
         super(context, attrs, defStyle);
         initUI();
     }
 
-    public void setStackedMode(String stackedModePostbackUrl)
-    {
-        this.stackedModePostbackUrl = stackedModePostbackUrl;
+    private void completeAuthorizationIfPossible(final String html) {
+
+        // Process HTML in a thread to improve performance
+        Runnable runnable = new Runnable() {
+
+            public void run() {
+                // If the postback has already been handled, stop now
+                if (postbackHandled.get()) {
+                    return;
+                }
+
+                if(is3dsV2){
+                    match3DSV2Parameters(html);
+                } else {
+                    match3DSV1Parameters(html);
+                }
+
+            }
+        };
+        Thread thread = new Thread(runnable);
+        thread.start();
+
     }
 
-    private void completeAuthorizationIfPossible(String html)
-    {
-        // If the postback has already been handled, stop now
-        if (postbackHandled.get()) {
-            return;
+    private void match3DSV2Parameters(String html) {
+
+        // Try and find the CRes in the supplied html
+
+        String cres = "";
+        String threeDSSessionData = null;
+
+        Matcher cresMatcher = cresFinder.matcher(html);
+        if (cresMatcher.find()) {
+            cres = cresMatcher.group(1);
+        } else {
+            return; // Not Found
         }
+
+        Matcher cresValueMatcher = valuePattern.matcher(cres);
+        if (cresValueMatcher.find()) {
+            cres = cresValueMatcher.group(1);
+        } else {
+            return; // Not Found
+        }
+
+        Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
+        if (threeDSSessionDataMatcher.find()) {
+            String fieldResult = threeDSSessionDataMatcher.group(1);
+            if(fieldResult != null) {
+                Matcher threeDSSessionDataValueMatcher = valuePattern.matcher(fieldResult);
+                if (threeDSSessionDataValueMatcher.find()) {
+                    threeDSSessionData = threeDSSessionDataValueMatcher.group(1);
+                }
+            }
+        }
+
+        if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
+            authorizationListener.onAuthorizationCompleted3dsV2(cres, threeDSSessionData);
+        }
+    }
+
+    private void match3DSV1Parameters(String html) {
 
         // Try and find the MD and PaRes form elements in the supplied html
         String md = "";
@@ -243,7 +239,7 @@ public class D3SView extends WebView
         } else {
             return; // Not Found
         }
-        
+
         Matcher paresMatcher = paresFinder.matcher(html);
         if (paresMatcher.find()) {
             pares = paresMatcher.group(1);
@@ -254,47 +250,25 @@ public class D3SView extends WebView
         // Now extract the values from the previously captured form elements
         Matcher mdValueMatcher = valuePattern.matcher(md);
         if (mdValueMatcher.find()) {
-        		md = mdValueMatcher.group(1);
+            md = mdValueMatcher.group(1);
         } else {
             return; // Not Found
         }
 
         Matcher paresValueMatcher = valuePattern.matcher(pares);
-        if (paresValueMatcher.find()){
+        if (paresValueMatcher.find()) {
             pares = paresValueMatcher.group(1);
         } else {
             return; // Not Found
         }
-        
+
         // If we get to this point, we've definitely got values for both the MD and PaRes
 
-        // The postbackHandled check is just to ensure we've not already called back. 
+        // The postbackHandled check is just to ensure we've not already called back.
         // We don't want onAuthorizationCompleted to be called twice.
-        if (postbackHandled.compareAndSet(false, true) && authorizationListener != null)
-        {
+        if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
             authorizationListener.onAuthorizationCompleted(md, pares);
         }
-    }
-
-    /**
-     * Checks if debug mode is on. Note, that you must not turn debug mode for production app !
-     *
-     * @return
-     */
-    public boolean isDebugMode()
-    {
-        return debugMode;
-    }
-
-    /**
-     * Sets the debug mode state. When set to <b>true</b>, ssl errors will be ignored. Do not turn debug mode ON
-     * for production environment !
-     *
-     * @param debugMode
-     */
-    public void setDebugMode(final boolean debugMode)
-    {
-        this.debugMode = debugMode;
     }
 
     /**
@@ -302,70 +276,77 @@ public class D3SView extends WebView
      *
      * @param authorizationListener
      */
-    public void setAuthorizationListener(final D3SSViewAuthorizationListener authorizationListener)
-    {
+    public void setAuthorizationListener(final D3SSViewAuthorizationListener authorizationListener) {
         this.authorizationListener = authorizationListener;
     }
 
     /**
-     * Starts 3DS authorization
+     * Starts 3DS v1 authorization
      *
      * @param acsUrl ACS server url, returned by the credit card processing gateway
      * @param md     MD parameter, returned by the credit card processing gateway
      * @param paReq  PaReq parameter, returned by the credit card processing gateway
      */
-    public void authorize(final String acsUrl, final String md, final String paReq)
-    {
-        authorize(acsUrl, md, paReq, null);
+    public void authorize(final String acsUrl, final String md, final String paReq) {
+        authorize(acsUrl, null, md, paReq, null, null);
+    }
+
+    /**
+     * Starts 3-D Secure v2 authentication
+     * @param acsUrl ACS server url - supplied by the payment gateway
+     * @param creq - CReq to post to the ACS
+     * @param threeDSSessionData - Session data to pass to the ACS. This will be reflected back in the callback
+     * @param postbackUrl - the URL to wait for, so the CRes can be extracted
+     */
+    public void authorize(final String acsUrl, final String creq, final String threeDSSessionData, final String postbackUrl) {
+        authorize(acsUrl, creq, null, null,  threeDSSessionData, postbackUrl);
     }
 
     /**
      * Starts 3DS authorization
      *
      * @param acsUrl      ACS server url, returned by the credit card processing gateway
+     * @param creq        CReq parameter (replaces MD and PaReq).
      * @param md          MD parameter, returned by the credit card processing gateway
      * @param paReq       PaReq parameter, returned by the credit card processing gateway
      * @param postbackUrl custom postback url for intercepting ACS server result posting. You may use any url you like
      *                    here, if you need, even non existing ones.
      */
-    public void authorize(final String acsUrl, final String md, final String paReq, final String postbackUrl)
-    {
-        urlReturned = false;
+    public void authorize(final String acsUrl, final String creq, final String md, final String paReq, final String threeDSSessionData, final String postbackUrl) {
         postbackHandled.set(false);
 
-        if (authorizationListener != null)
-        {
+        if (authorizationListener != null) {
             authorizationListener.onAuthorizationStarted(this);
         }
 
-        if (!TextUtils.isEmpty(postbackUrl))
-        {
+        if (!TextUtils.isEmpty(postbackUrl)) {
             this.postbackUrl = postbackUrl;
         }
 
         String postParams;
-        try
-        {
-            postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
-        }
-        catch (UnsupportedEncodingException e)
-        {
+        try {
+            if(creq != null){
+                // 3-D Secure v2
+                is3dsV2 = true;
+                postParams = String.format(Locale.US, "creq=%1$s&threeDSSessionData=%2$s", URLEncoder.encode(creq, "UTF-8"), URLEncoder.encode(threeDSSessionData, "UTF-8"));
+            } else {
+                // 3-D Secure v1
+                postParams = String.format(Locale.US, "MD=%1$s&TermUrl=%2$s&PaReq=%3$s", URLEncoder.encode(md, "UTF-8"), URLEncoder.encode(this.postbackUrl, "UTF-8"), URLEncoder.encode(paReq, "UTF-8"));
+            }
+        } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
 
         postUrl(acsUrl, postParams.getBytes());
     }
 
-    class D3SJSInterface
-    {
+    class D3SJSInterface {
 
-        D3SJSInterface()
-        {
+        D3SJSInterface() {
         }
 
         @android.webkit.JavascriptInterface
-        public void processHTML(final String html)
-        {
+        public void processHTML(final String html) {
             completeAuthorizationIfPossible(html);
         }
     }
