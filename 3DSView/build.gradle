@@ -1,26 +1,11 @@
-buildscript {
-    repositories {
-        google()
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.2'
-    }
-}
 apply plugin: 'com.android.library'
 
-repositories {
-    google()
-    jcenter()
-}
-
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 10
-        targetSdkVersion 28
+        targetSdkVersion 30
         versionCode 1
         versionName "3DSView"
     }
@@ -30,12 +15,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
-
-dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.appcompat:appcompat:1.0.2"
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-}
-
-//apply from: 'bintray-publish.gradle'

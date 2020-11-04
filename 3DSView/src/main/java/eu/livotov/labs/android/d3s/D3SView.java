@@ -169,21 +169,18 @@ public class D3SView extends WebView {
     private void completeAuthorizationIfPossible(final String html) {
 
         // Process HTML in a thread to improve performance
-        Runnable runnable = new Runnable() {
-
-            public void run() {
-                // If the postback has already been handled, stop now
-                if (postbackHandled.get()) {
-                    return;
-                }
-
-                if(is3dsV2){
-                    match3DSV2Parameters(html);
-                } else {
-                    match3DSV1Parameters(html);
-                }
-
+        Runnable runnable = () -> {
+            // If the postback has already been handled, stop now
+            if (postbackHandled.get()) {
+                return;
             }
+
+            if(is3dsV2){
+                match3DSV2Parameters(html);
+            } else {
+                match3DSV1Parameters(html);
+            }
+
         };
         Thread thread = new Thread(runnable);
         thread.start();
