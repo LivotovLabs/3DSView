@@ -1,15 +1,12 @@
 package eu.livotov.labs.android.d3s;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.http.SslError;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebResourceResponse;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -98,7 +95,7 @@ public class D3SView extends WebView {
         setWebViewClient(new WebViewClient() {
 
             @Override
-            public WebResourceResponse shouldInterceptRequest (WebView view, String url) {
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
                 if (isPostbackUrl(url)) {
                     // Wait for the form data to be processed in the other thread.
                     // 1.5s should be more than enough
@@ -175,7 +172,7 @@ public class D3SView extends WebView {
                 return;
             }
 
-            if(is3dsV2){
+            if (is3dsV2) {
                 match3DSV2Parameters(html);
             } else {
                 match3DSV1Parameters(html);
@@ -211,7 +208,7 @@ public class D3SView extends WebView {
         Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
         if (threeDSSessionDataMatcher.find()) {
             String fieldResult = threeDSSessionDataMatcher.group(1);
-            if(fieldResult != null) {
+            if (fieldResult != null) {
                 Matcher threeDSSessionDataValueMatcher = valuePattern.matcher(fieldResult);
                 if (threeDSSessionDataValueMatcher.find()) {
                     threeDSSessionData = threeDSSessionDataValueMatcher.group(1);
@@ -225,7 +222,6 @@ public class D3SView extends WebView {
     }
 
     private void match3DSV1Parameters(String html) {
-
         // Try and find the MD and PaRes form elements in the supplied html
         String md = "";
         String pares = "";
@@ -290,13 +286,14 @@ public class D3SView extends WebView {
 
     /**
      * Starts 3-D Secure v2 authentication
-     * @param acsUrl ACS server url - supplied by the payment gateway
-     * @param creq - CReq to post to the ACS
+     *
+     * @param acsUrl             ACS server url - supplied by the payment gateway
+     * @param creq               - CReq to post to the ACS
      * @param threeDSSessionData - Session data to pass to the ACS. This will be reflected back in the callback
-     * @param postbackUrl - the URL to wait for, so the CRes can be extracted
+     * @param postbackUrl        - the URL to wait for, so the CRes can be extracted
      */
     public void authorize(final String acsUrl, final String creq, final String threeDSSessionData, final String postbackUrl) {
-        authorize(acsUrl, creq, null, null,  threeDSSessionData, postbackUrl);
+        authorize(acsUrl, creq, null, null, threeDSSessionData, postbackUrl);
     }
 
     /**
@@ -322,7 +319,7 @@ public class D3SView extends WebView {
 
         String postParams;
         try {
-            if(creq != null){
+            if (creq != null) {
                 // 3-D Secure v2
                 is3dsV2 = true;
                 postParams = String.format(Locale.US, "creq=%1$s&threeDSSessionData=%2$s", URLEncoder.encode(creq, "UTF-8"), URLEncoder.encode(threeDSSessionData, "UTF-8"));
