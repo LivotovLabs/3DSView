@@ -62,7 +62,7 @@ public class D3SView extends WebView {
     /**
      * Pattern to find the value from the result of the above searches
      */
-    private static final Pattern valuePattern = Pattern.compile(".*? value=\"(.+?)\"", Pattern.DOTALL);
+    private static final Pattern valuePattern = Pattern.compile(".*? value=\"(\\S+?)\"", Pattern.DOTALL);
 
     /**
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
