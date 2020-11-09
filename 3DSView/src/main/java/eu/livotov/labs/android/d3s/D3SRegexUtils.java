@@ -22,6 +22,8 @@ final class D3SRegexUtils {
 
     /**
      * Finds the PaRes in an html page.
+     * <p>
+     * Note: If more than one PaRes is found in a page only the first will be returned.
      *
      * @param html String representation of the html page to search within.
      * @return PaRes or null if not found
