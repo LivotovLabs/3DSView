@@ -92,4 +92,25 @@ public class D3SRegexUtilsTest {
         assertThat(paRes)
                 .isEqualTo("pares_value");
     }
+
+    @Test
+    public void given_html_with_valid_pares_case_insensitive_when_PaRes_match_attempted_then_should_return_null() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"PaRes\" name=\"pares\" value=\"pares_value\">\n" +
+                "  <input type=\"hidden\" id=\"MD\" name=\"MD\" value=\"\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String paRes = D3SRegexUtils.findPaRes(html);
+
+        // Then
+        assertThat(paRes)
+                .isEqualTo("pares_value");
+    }
 }
