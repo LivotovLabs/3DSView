@@ -52,7 +52,6 @@ public class D3SView extends WebView {
      * Patterns to find the various fields in the ACS server post response
      */
     private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", Pattern.DOTALL);
-    private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", Pattern.DOTALL);
     private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
@@ -224,18 +223,10 @@ public class D3SView extends WebView {
     private void match3DSV1Parameters(String html) {
         // Try and find the MD and PaRes form elements in the supplied html
         String md = "";
-        String pares = "";
 
         Matcher mdMatcher = mdFinder.matcher(html);
         if (mdMatcher.find()) {
             md = mdMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        Matcher paresMatcher = paresFinder.matcher(html);
-        if (paresMatcher.find()) {
-            pares = paresMatcher.group(1);
         } else {
             return; // Not Found
         }
@@ -248,19 +239,15 @@ public class D3SView extends WebView {
             return; // Not Found
         }
 
-        Matcher paresValueMatcher = valuePattern.matcher(pares);
-        if (paresValueMatcher.find()) {
-            pares = paresValueMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
+        final String paRes = D3SRegexUtils.findPaRes(html);
+        if (paRes == null) return;
 
         // If we get to this point, we've definitely got values for both the MD and PaRes
 
         // The postbackHandled check is just to ensure we've not already called back.
         // We don't want onAuthorizationCompleted to be called twice.
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
-            authorizationListener.onAuthorizationCompleted(md, pares);
+            authorizationListener.onAuthorizationCompleted(md, paRes);
         }
     }
 
