@@ -51,7 +51,6 @@ public class D3SView extends WebView {
     /**
      * Patterns to find the various fields in the ACS server post response
      */
-    private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", Pattern.DOTALL);
     private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
@@ -222,22 +221,8 @@ public class D3SView extends WebView {
 
     private void match3DSV1Parameters(String html) {
         // Try and find the MD and PaRes form elements in the supplied html
-        String md = "";
-
-        Matcher mdMatcher = mdFinder.matcher(html);
-        if (mdMatcher.find()) {
-            md = mdMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        // Now extract the values from the previously captured form elements
-        Matcher mdValueMatcher = valuePattern.matcher(md);
-        if (mdValueMatcher.find()) {
-            md = mdValueMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
+        final String md = D3SRegexUtils.findMd(html);
+        if (md == null) return;
 
         final String paRes = D3SRegexUtils.findPaRes(html);
         if (paRes == null) return;
