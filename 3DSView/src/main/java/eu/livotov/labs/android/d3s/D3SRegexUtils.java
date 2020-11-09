@@ -6,20 +6,19 @@ import androidx.annotation.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.DOTALL;
+import static java.util.regex.Pattern.compile;
+
 /**
  * Utilities to find 3DS values in ACS webpages.
  */
 final class D3SRegexUtils {
 
     /**
-     * Pattern to find an html tag with an attribute named PaRes.
+     * Pattern to find the value of an attribute named value from an html tag with an attribute named name and a value of PaRes.
      */
-    private static final Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\"PaRes\"[^<>]*>).*?", Pattern.DOTALL);
-
-    /**
-     * Pattern to find the value from an html tag with an attribute named value.
-     */
-    private static final Pattern valuePattern = Pattern.compile(".*? value=\"(\\S+?)\"", Pattern.DOTALL);
+    private static final Pattern paresFinder = compile("<input(?=.+?name=\"PaRes\")(?=.+?value=\"(\\S+?)\").+>", DOTALL | CASE_INSENSITIVE);
 
     /**
      * Finds the PaRes in an html page.
@@ -31,18 +30,10 @@ final class D3SRegexUtils {
     static String findPaRes(@NonNull String html) {
         if (html.trim().isEmpty()) return null;
 
-        String paResTag = null;
+        String paRes = null;
         Matcher paresMatcher = paresFinder.matcher(html);
         if (paresMatcher.find()) {
-            paResTag = paresMatcher.group(1);
-        }
-
-        if (paResTag == null) return null;
-
-        String paRes = null;
-        Matcher paresValueMatcher = valuePattern.matcher(paResTag);
-        if (paresValueMatcher.find()) {
-            paRes = paresValueMatcher.group(1);
+            paRes = paresMatcher.group(1);
         }
 
         return paRes;
