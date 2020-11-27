@@ -1,15 +1,12 @@
 package eu.livotov.labs.android.d3s;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.http.SslError;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebResourceResponse;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -54,15 +51,13 @@ public class D3SView extends WebView {
     /**
      * Patterns to find the various fields in the ACS server post response
      */
-    private static Pattern mdFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"MD\\\"[^<>]*>).*?", Pattern.DOTALL);
-    private static Pattern paresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"PaRes\\\"[^<>]*>).*?", Pattern.DOTALL);
     private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     /**
      * Pattern to find the value from the result of the above searches
      */
-    private static Pattern valuePattern = Pattern.compile(".*? value=\\\"(.*?)\\\"", Pattern.DOTALL);
+    private static final Pattern valuePattern = Pattern.compile(".*? value=\"(\\S+?)\"", Pattern.DOTALL);
 
     /**
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
@@ -98,7 +93,7 @@ public class D3SView extends WebView {
         setWebViewClient(new WebViewClient() {
 
             @Override
-            public WebResourceResponse shouldInterceptRequest (WebView view, String url) {
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
                 if (isPostbackUrl(url)) {
                     // Wait for the form data to be processed in the other thread.
                     // 1.5s should be more than enough
@@ -175,7 +170,7 @@ public class D3SView extends WebView {
                 return;
             }
 
-            if(is3dsV2){
+            if (is3dsV2) {
                 match3DSV2Parameters(html);
             } else {
                 match3DSV1Parameters(html);
@@ -211,7 +206,7 @@ public class D3SView extends WebView {
         Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
         if (threeDSSessionDataMatcher.find()) {
             String fieldResult = threeDSSessionDataMatcher.group(1);
-            if(fieldResult != null) {
+            if (fieldResult != null) {
                 Matcher threeDSSessionDataValueMatcher = valuePattern.matcher(fieldResult);
                 if (threeDSSessionDataValueMatcher.find()) {
                     threeDSSessionData = threeDSSessionDataValueMatcher.group(1);
@@ -225,46 +220,19 @@ public class D3SView extends WebView {
     }
 
     private void match3DSV1Parameters(String html) {
-
         // Try and find the MD and PaRes form elements in the supplied html
-        String md = "";
-        String pares = "";
+        final String md = D3SRegexUtils.findMd(html);
+        if (md == null) return;
 
-        Matcher mdMatcher = mdFinder.matcher(html);
-        if (mdMatcher.find()) {
-            md = mdMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        Matcher paresMatcher = paresFinder.matcher(html);
-        if (paresMatcher.find()) {
-            pares = paresMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        // Now extract the values from the previously captured form elements
-        Matcher mdValueMatcher = valuePattern.matcher(md);
-        if (mdValueMatcher.find()) {
-            md = mdValueMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        Matcher paresValueMatcher = valuePattern.matcher(pares);
-        if (paresValueMatcher.find()) {
-            pares = paresValueMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
+        final String paRes = D3SRegexUtils.findPaRes(html);
+        if (paRes == null) return;
 
         // If we get to this point, we've definitely got values for both the MD and PaRes
 
         // The postbackHandled check is just to ensure we've not already called back.
         // We don't want onAuthorizationCompleted to be called twice.
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
-            authorizationListener.onAuthorizationCompleted(md, pares);
+            authorizationListener.onAuthorizationCompleted(md, paRes);
         }
     }
 
@@ -290,13 +258,14 @@ public class D3SView extends WebView {
 
     /**
      * Starts 3-D Secure v2 authentication
-     * @param acsUrl ACS server url - supplied by the payment gateway
-     * @param creq - CReq to post to the ACS
+     *
+     * @param acsUrl             ACS server url - supplied by the payment gateway
+     * @param creq               - CReq to post to the ACS
      * @param threeDSSessionData - Session data to pass to the ACS. This will be reflected back in the callback
-     * @param postbackUrl - the URL to wait for, so the CRes can be extracted
+     * @param postbackUrl        - the URL to wait for, so the CRes can be extracted
      */
     public void authorize(final String acsUrl, final String creq, final String threeDSSessionData, final String postbackUrl) {
-        authorize(acsUrl, creq, null, null,  threeDSSessionData, postbackUrl);
+        authorize(acsUrl, creq, null, null, threeDSSessionData, postbackUrl);
     }
 
     /**
@@ -322,7 +291,7 @@ public class D3SView extends WebView {
 
         String postParams;
         try {
-            if(creq != null){
+            if (creq != null) {
                 // 3-D Secure v2
                 is3dsV2 = true;
                 postParams = String.format(Locale.US, "creq=%1$s&threeDSSessionData=%2$s", URLEncoder.encode(creq, "UTF-8"), URLEncoder.encode(threeDSSessionData, "UTF-8"));
