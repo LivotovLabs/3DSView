@@ -26,7 +26,7 @@ Get It
 - Artifact ID: 3DSView
 
 ```groovy
-compile ('eu.livotov.labs.android:3DSView:1.1.2@aar') {transitive=true}
+implementation 'eu.livotov.labs.android:3DSView:x.y.z@aar'
 
 ```
 
@@ -38,13 +38,13 @@ What's new (1.1.2.9)
 Installation
 ============
 
-Release versions are available from jCenter repository, so just add the "compile..." statement to your project. For snapshots, please
+Release versions are available from jCenter repository, so just add the "implementation" statement to your project. For snapshots, please
 add our bintray snapshots repository url first: https://dl.bintray.com/livotovlabs/maven
 
 ```groovy
 dependencies {
     ...
-    compile 'eu.livotov.labs.android:3DSView:1.1.2@aar'
+    implementation 'eu.livotov.labs.android:3DSView:x.y.z@aar'
     ...
 }
 ```
