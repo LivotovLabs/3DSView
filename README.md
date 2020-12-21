@@ -43,9 +43,7 @@ add our bintray snapshots repository url first: https://dl.bintray.com/livotovla
 
 ```groovy
 dependencies {
-    ...
     implementation 'eu.livotov.labs.android:3DSView:x.y.z@aar'
-    ...
 }
 ```
 
@@ -55,26 +53,15 @@ Alternatively you may download the source code and build it on your own.
 Quick Usage
 ===========
 
-- Build your own or download precompiled 3dsview.jar from releases section and put it to the libs folder of your app project.
-- Add `eu.livotov.labs.android.d3s.D3SView` to your layout file (or create and add it programmatically)
-- In corresponding `Activity` or `Fragment`, configure the instance of `D3SView` by calling setAuthorizationListener method (see configuration options below)
-- Invoke the `D3SView#authorize(String, String, String)` method, providing "dummy" postback url (optionally), callback listener and 3DS initiation parameters.
-
-Once user completes the authorization at the ACS server, your callback method will be automatically called with the 3DS response data, which you may then pass to your processing backend server for payment finalization.
-
-Configuration
-=============
-
-- `DS3View#setAuthorizationListener(D3SViewAuthorizationListener)` - adds listener to receive authorization results and
-progress messages. You will receive authorization MD and PaRes values there as well, when 3DSecure completes.
-
-
-Start
-=====
-
-Simply call `D3SView#authorize(String, String, String)` method and pass MD, PaReq and ACS url values, you receive from your card payment gateway and listen for authorization completion event in your callback. 
-
-P.S. Specifying postback url is optional, the library will use the default value then.
+1. Build your own or download precompiled 3dsview.jar from releases section and put it to the libs folder of your app project.
+2. Add `eu.livotov.labs.android.d3s.D3SView` to your layout file (or create and add it programmatically)
+3. In corresponding `Activity` or `Fragment`, configure the instance of `D3SView` by calling `DS3View#setAuthorizationListener(D3SViewAuthorizationListener)`. 
+   - This adds a listener to receive authorization results and
+progress messages. 
+   - You will receive authorization MD and PaRes values there as well, when 3DSecure completes.
+4. Invoke the `D3SView#authorize(String, String, String)` method by passing MD, PaReq and ACS url values, you receive from your card payment gateway and listen for authorization completion event in your callback. 
+   - Specifying postback url is optional but recommended, the library will use a sensible default value if not set.
+5. Once user completes the authorization at the ACS server, your callback method will be automatically called with the 3DS response data, which you may then pass to your processing backend server for payment finalization.
 
 Bugs, Suggestions, Ideas
 ========================
