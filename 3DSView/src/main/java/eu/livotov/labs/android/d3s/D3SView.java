@@ -12,8 +12,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -47,16 +45,6 @@ public class D3SView extends WebView {
      * Namespace for JS bridge
      */
     private static String JavaScriptNS = "D3SJS";
-
-    /**
-     * Patterns to find the various fields in the ACS server post response
-     */
-    private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-
-    /**
-     * Pattern to find the value from the result of the above searches
-     */
-    private static final Pattern valuePattern = Pattern.compile(".*? value=\"(\\S+?)\"", Pattern.DOTALL);
 
     /**
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
@@ -183,21 +171,11 @@ public class D3SView extends WebView {
 
     private void match3DSV2Parameters(String html) {
         // Try and find the CRes and threeDSSessionData form elements in the supplied html
-        String threeDSSessionData = null;
-
         final String cRes = D3SRegexUtils.findCRes(html);
         if (cRes == null) return;
 
-        Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
-        if (threeDSSessionDataMatcher.find()) {
-            String fieldResult = threeDSSessionDataMatcher.group(1);
-            if (fieldResult != null) {
-                Matcher threeDSSessionDataValueMatcher = valuePattern.matcher(fieldResult);
-                if (threeDSSessionDataValueMatcher.find()) {
-                    threeDSSessionData = threeDSSessionDataValueMatcher.group(1);
-                }
-            }
-        }
+        final String threeDSSessionData = D3SRegexUtils.findThreeDSSessionData(html);
+        if (threeDSSessionData == null) return;
 
         // If we get to this point, we've definitely got values for both the CRes and threeDSSessionData
 

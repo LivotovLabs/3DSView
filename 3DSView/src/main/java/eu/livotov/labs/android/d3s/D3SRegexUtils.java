@@ -31,6 +31,11 @@ final class D3SRegexUtils {
     private static final Pattern cresFinder = Pattern.compile("<input(?=[^<>]+?value=\"([^\"]+?)\")[^<>]+?name=\"CRes\"[^<>]+?>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     /**
+     * Pattern to find the value of an attribute named value from an html tag with an attribute named name and a value of threeDSSessionData.
+     */
+    private static final Pattern threeDSSessionDataFinder = Pattern.compile("<input(?=[^<>]+?value=\"([^\"]+?)\")[^<>]+?name=\"threeDSSessionData\"[^<>]+?>", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    /**
      * Finds the MD in an html page.
      * <p>
      * Note: If more than one MD is found in a page only the first will be returned.
@@ -88,6 +93,27 @@ final class D3SRegexUtils {
         Matcher cresMatcher = cresFinder.matcher(html);
         if (cresMatcher.find()) {
             cRes = cresMatcher.group(1);
+        }
+
+        return cRes;
+    }
+
+    /**
+     * Finds the threeDSSessionData in an html page.
+     * <p>
+     * Note: If more than one threeDSSessionData is found in a page only the first will be returned.
+     *
+     * @param html String representation of the html page to search within.
+     * @return threeDSSessionData or null if not found
+     */
+    @Nullable
+    public static String findThreeDSSessionData(@NonNull String html) {
+        if (html.trim().isEmpty()) return null;
+
+        String cRes = null;
+        Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
+        if (threeDSSessionDataMatcher.find()) {
+            cRes = threeDSSessionDataMatcher.group(1);
         }
 
         return cRes;
