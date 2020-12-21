@@ -183,9 +183,7 @@ public class D3SView extends WebView {
     }
 
     private void match3DSV2Parameters(String html) {
-
-        // Try and find the CRes in the supplied html
-
+        // Try and find the CRes and threeDSSessionData form elements in the supplied html
         String cres = "";
         String threeDSSessionData = null;
 
@@ -214,6 +212,10 @@ public class D3SView extends WebView {
             }
         }
 
+        // If we get to this point, we've definitely got values for both the CRes and threeDSSessionData
+
+        // The postbackHandled check is just to ensure we've not already called back.
+        // We don't want onAuthorizationCompleted to be called twice.
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
             authorizationListener.onAuthorizationCompleted3dsV2(cres, threeDSSessionData);
         }
