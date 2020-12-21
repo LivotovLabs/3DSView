@@ -51,7 +51,6 @@ public class D3SView extends WebView {
     /**
      * Patterns to find the various fields in the ACS server post response
      */
-    private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     /**
@@ -184,22 +183,10 @@ public class D3SView extends WebView {
 
     private void match3DSV2Parameters(String html) {
         // Try and find the CRes and threeDSSessionData form elements in the supplied html
-        String cres = "";
         String threeDSSessionData = null;
 
-        Matcher cresMatcher = cresFinder.matcher(html);
-        if (cresMatcher.find()) {
-            cres = cresMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        Matcher cresValueMatcher = valuePattern.matcher(cres);
-        if (cresValueMatcher.find()) {
-            cres = cresValueMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
+        final String cRes = D3SRegexUtils.findCRes(html);
+        if (cRes == null) return;
 
         Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
         if (threeDSSessionDataMatcher.find()) {
@@ -217,7 +204,7 @@ public class D3SView extends WebView {
         // The postbackHandled check is just to ensure we've not already called back.
         // We don't want onAuthorizationCompleted to be called twice.
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
-            authorizationListener.onAuthorizationCompleted3dsV2(cres, threeDSSessionData);
+            authorizationListener.onAuthorizationCompleted3dsV2(cRes, threeDSSessionData);
         }
     }
 
