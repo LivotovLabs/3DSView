@@ -57,7 +57,7 @@ Quick Usage
 
 - Build your own or download precompiled 3dsview.jar from releases section and put it to the libs folder of your app project.
 - Add `eu.livotov.labs.android.d3s.D3SView` to your layout file (or create and add it programmatically)
-- In corresponding `Activity` or `Fragment`, configure the instance of `D3SView` by calling setXXX methods (see configuration options below)
+- In corresponding `Activity` or `Fragment`, configure the instance of `D3SView` by calling setAuthorizationListener method (see configuration options below)
 - Invoke the `D3SView#authorize(String, String, String)` method, providing "dummy" postback url (optionally), callback listener and 3DS initiation parameters.
 
 Once user completes the authorization at the ACS server, your callback method will be automatically called with the 3DS response data, which you may then pass to your processing backend server for payment finalization.
@@ -65,8 +65,6 @@ Once user completes the authorization at the ACS server, your callback method wi
 Configuration
 =============
 
-- `DS3View#setDebug(boolean)` - enables or disables debug mode. In debug mode, self-signed or broken certificates/ssl
- errors will be ignored. It is important not to enable debug mode for release apps.
 - `DS3View#setAuthorizationListener(D3SViewAuthorizationListener)` - adds listener to receive authorization results and
 progress messages. You will receive authorization MD and PaRes values there as well, when 3DSecure completes.
 
