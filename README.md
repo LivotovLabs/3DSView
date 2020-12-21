@@ -63,6 +63,8 @@ progress messages.
    - Specifying postback url is optional but recommended, the library will use a sensible default value if not set.
 5. Once user completes the authorization at the ACS server, your callback method will be automatically called with the 3DS response data, which you may then pass to your processing backend server for payment finalization.
 
+For a quick sample see the checkout the [3DSViewSample](https://github.com/LivotovLabs/3DSView/tree/master/3DSViewSample) sub project in this repo.
+
 Bugs, Suggestions, Ideas
 ========================
 Any ideas/bugs/etc, as well as pull requests, are welcome in the [issues section](https://github.com/LivotovLabs/3DSView/issues).
