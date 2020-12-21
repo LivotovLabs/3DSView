@@ -16,7 +16,7 @@ import static java.util.regex.Pattern.compile;
 final class D3SRegexUtils {
 
     /**
-     * Pattern to find the value of an attribute named value from an html tag with an attribute named name and a value of PaRes.
+     * Pattern to find the value of an attribute named value from an html tag with an attribute named name and a value of MD.
      */
     private static final Pattern mdFinder = compile("<input(?=[^<>]+?value=\"([^\"]+?)\")[^<>]+?name=\"MD\"[^<>]+?>", DOTALL | CASE_INSENSITIVE);
 
