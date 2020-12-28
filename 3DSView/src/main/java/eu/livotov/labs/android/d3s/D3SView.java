@@ -12,8 +12,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -47,17 +45,6 @@ public class D3SView extends WebView {
      * Namespace for JS bridge
      */
     private static String JavaScriptNS = "D3SJS";
-
-    /**
-     * Patterns to find the various fields in the ACS server post response
-     */
-    private static Pattern cresFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"CRes\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-    private static Pattern threeDSSessionDataFinder = Pattern.compile(".*?(<input[^<>]* name=\\\"threeDSSessionData\\\"[^<>]*>).*?", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-
-    /**
-     * Pattern to find the value from the result of the above searches
-     */
-    private static final Pattern valuePattern = Pattern.compile(".*? value=\"(\\S+?)\"", Pattern.DOTALL);
 
     /**
      * Url that will be used by ACS server for posting result data on authorization completion. We will be monitoring
@@ -183,39 +170,19 @@ public class D3SView extends WebView {
     }
 
     private void match3DSV2Parameters(String html) {
+        // Try and find the CRes and threeDSSessionData form elements in the supplied html
+        final String cRes = D3SRegexUtils.findCRes(html);
+        if (cRes == null) return;
 
-        // Try and find the CRes in the supplied html
+        final String threeDSSessionData = D3SRegexUtils.findThreeDSSessionData(html);
+        if (threeDSSessionData == null) return;
 
-        String cres = "";
-        String threeDSSessionData = null;
+        // If we get to this point, we've definitely got values for both the CRes and threeDSSessionData
 
-        Matcher cresMatcher = cresFinder.matcher(html);
-        if (cresMatcher.find()) {
-            cres = cresMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        Matcher cresValueMatcher = valuePattern.matcher(cres);
-        if (cresValueMatcher.find()) {
-            cres = cresValueMatcher.group(1);
-        } else {
-            return; // Not Found
-        }
-
-        Matcher threeDSSessionDataMatcher = threeDSSessionDataFinder.matcher(html);
-        if (threeDSSessionDataMatcher.find()) {
-            String fieldResult = threeDSSessionDataMatcher.group(1);
-            if (fieldResult != null) {
-                Matcher threeDSSessionDataValueMatcher = valuePattern.matcher(fieldResult);
-                if (threeDSSessionDataValueMatcher.find()) {
-                    threeDSSessionData = threeDSSessionDataValueMatcher.group(1);
-                }
-            }
-        }
-
+        // The postbackHandled check is just to ensure we've not already called back.
+        // We don't want onAuthorizationCompleted to be called twice.
         if (postbackHandled.compareAndSet(false, true) && authorizationListener != null) {
-            authorizationListener.onAuthorizationCompleted3dsV2(cres, threeDSSessionData);
+            authorizationListener.onAuthorizationCompleted3dsV2(cRes, threeDSSessionData);
         }
     }
 

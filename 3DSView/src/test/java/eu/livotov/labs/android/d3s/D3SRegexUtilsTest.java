@@ -280,4 +280,280 @@ public class D3SRegexUtilsTest {
         assertThat(result)
                 .isEqualTo("pares_value");
     }
+
+    @Test
+    public void given_empty_html_when_CRes_match_attempted_then_should_return_null() {
+        // Given
+        String html = "";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_blank_html_when_CRes_match_attempted_then_should_return_null() {
+        // Given
+        String html = "               ";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_html_with_no_cres_when_CRes_match_attempted_then_should_return_null() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<div class=\"threeds-one\">" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_html_with_empty_cres_when_CRes_match_attempted_then_should_return_null() {
+        // https://github.com/LivotovLabs/3DSView/issues/30
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"threeDSSessionData\" name=\"threeDSSessionData\" value=\"\">\n" +
+                "  <input type=\"hidden\" id=\"CRes\" name=\"CRes\" value=\"\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_html_with_valid_cres_when_CRes_match_attempted_then_should_return_cres() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"threeDSSessionData\" name=\"threeDSSessionData\" value=\"three_ds_session_data\">\n" +
+                "  <input type=\"hidden\" id=\"CRes\" name=\"CRes\" value=\"cres_value\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isEqualTo("cres_value");
+    }
+
+    @Test
+    public void given_html_with_valid_cres_case_insensitive_when_CRes_match_attempted_then_should_return_cres() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"threeDSSessionData\" name=\"threedssessiondata\" value=\"three_ds_session_data\">\n" +
+                "  <input type=\"hidden\" id=\"CRes\" name=\"cres\" value=\"cres_value\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isEqualTo("cres_value");
+    }
+
+
+    @Test
+    public void given_html_with_valid_cres_multiline_when_CRes_match_attempted_then_should_return_cres() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input" +
+                "    type=\"hidden\" " +
+                "    id=\"threeDSSessionData\" " +
+                "    name=\"threeDSSessionData\" " +
+                "    value=\"three_ds_session_data\">\n" +
+                "  <input " +
+                "   type=\"hidden\" " +
+                "   id=\"CRes\" " +
+                "   name=\"CRes\" " +
+                "   value=\"cres_value\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findCRes(html);
+
+        // Then
+        assertThat(result)
+                .isEqualTo("cres_value");
+    }
+
+    @Test
+    public void given_empty_html_when_threeDSSessionData_match_attempted_then_should_return_null() {
+        // Given
+        String html = "";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_blank_html_when_threeDSSessionData_match_attempted_then_should_return_null() {
+        // Given
+        String html = "               ";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_html_with_no_threedssessiondata_when_threeDSSessionData_match_attempted_then_should_return_null() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<div class=\"threeds-one\">" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_html_with_empty_threedssessiondata_when_threeDSSessionData_match_attempted_then_should_return_null() {
+        // https://github.com/LivotovLabs/3DSView/issues/30
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"threeDSSessionData\" name=\"threeDSSessionData\" value=\"\">\n" +
+                "  <input type=\"hidden\" id=\"CRes\" name=\"CRes\" value=\"\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isNull();
+    }
+
+    @Test
+    public void given_html_with_valid_threedssessiondata_when_threeDSSessionData_match_attempted_then_should_return_threedssessiondata() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"threeDSSessionData\" name=\"threeDSSessionData\" value=\"three_ds_session_data\">\n" +
+                "  <input type=\"hidden\" id=\"CRes\" name=\"CRes\" value=\"cres_value\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isEqualTo("three_ds_session_data");
+    }
+
+    @Test
+    public void given_html_with_valid_threedssessiondata_case_insensitive_when_threeDSSessionData_match_attempted_then_should_return_threedssessiondata() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input type=\"hidden\" id=\"threeDSSessionData\" name=\"threedssessiondata\" value=\"three_ds_session_data\">\n" +
+                "  <input type=\"hidden\" id=\"CRes\" name=\"cres\" value=\"cres_value\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isEqualTo("three_ds_session_data");
+    }
+
+
+    @Test
+    public void given_html_with_valid_threedssessiondata_multiline_when_threeDSSessionData_match_attempted_then_should_return_threedssessiondata() {
+        // Given
+        String html = "<html>" +
+                "<head>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<form method=\"POST\" id=\"TermForm\">\n" +
+                "  <input" +
+                "    type=\"hidden\" " +
+                "    id=\"threeDSSessionData\" " +
+                "    name=\"threeDSSessionData\" " +
+                "    value=\"three_ds_session_data\">\n" +
+                "  <input " +
+                "   type=\"hidden\" " +
+                "   id=\"CRes\" " +
+                "   name=\"CRes\" " +
+                "   value=\"cres_value\">\n" +
+                "</form>" +
+                "</html>";
+
+        // When
+        String result = D3SRegexUtils.findThreeDSSessionData(html);
+
+        // Then
+        assertThat(result)
+                .isEqualTo("three_ds_session_data");
+    }
 }
