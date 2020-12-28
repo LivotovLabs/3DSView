@@ -1,1 +1,2 @@
 include ':3DSView'
+include ':3DSViewSample'
